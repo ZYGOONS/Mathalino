@@ -1,0 +1,104 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fb;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-brand h1 {
+  margin: 0;
+  font-size: 36px;
+  color: #222;
+}
+
+.login-brand p {
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.login-title {
+  margin-bottom: 24px;
+}
+
+.login-title h2 {
+  margin-bottom: 6px;
+  color: #222;
+  font-size: 22px;
+}
+
+.login-title p {
+  margin: 0;
+  color: #777;
+  font-size: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border: 1px solid #d9dee8;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  background: white;
+  color: #222;
+}
+
+.form-group input:focus {
+  border-color: #4f7cff;
+  box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.12);
+}
+
+.login-button {
+  width: 100%;
+  padding: 13px;
+  margin-top: 6px;
+  border: none;
+  border-radius: 10px;
+  background: #4f7cff;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  background: #3f6ee8;
+}
+
+.admin-note {
+  margin-top: 20px;
+  text-align: center;
+  color: #8a8a8a;
+  font-size: 12px;
+}

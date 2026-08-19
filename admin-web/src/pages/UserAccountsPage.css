@@ -1,0 +1,167 @@
+.users-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.users-header {
+  height: 72px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.users-header h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 24px;
+}
+
+.users-header p {
+  margin: 3px 0 0;
+  color: #8a8a8a;
+  font-size: 12px;
+}
+
+.back-dashboard-button {
+  padding: 10px 16px;
+  border: 1px solid #d7dce5;
+  border-radius: 9px;
+  background: white;
+  color: #374151;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.back-dashboard-button:hover {
+  background: #f3f4f6;
+}
+
+.users-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 55px 30px;
+}
+
+.users-title h1 {
+  margin: 0 0 8px;
+  color: #1f2937;
+  font-size: 30px;
+}
+
+.users-title p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.user-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 32px;
+  margin-bottom: 18px;
+}
+
+.tab {
+  border: 1px solid #d8dde8;
+  background: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  color: #4b5563;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.active-tab {
+  background: #4f7cff;
+  color: white;
+  border-color: #4f7cff;
+}
+
+.users-table-container {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td {
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid #edf0f4;
+  font-size: 14px;
+}
+
+.users-table th {
+  background: #fafbfc;
+  color: #6b7280;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.users-table td {
+  color: #374151;
+}
+
+.status {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.active-status {
+  background: #eaf8ef;
+  color: #26834a;
+}
+
+.inactive-status {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.view-details-button {
+  border: none;
+  background: transparent;
+  color: #4f7cff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-details-button:hover {
+  text-decoration: underline;
+}
+
+.temporary-data-note {
+  margin-top: 14px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .users-header {
+    padding: 0 20px;
+  }
+
+  .users-content {
+    padding: 35px 20px;
+  }
+
+  .users-table-container {
+    overflow-x: auto;
+  }
+
+  .users-table {
+    min-width: 750px;
+  }
+}
