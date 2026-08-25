@@ -29,6 +29,7 @@ function DashboardPage() {
         </div>
 
         <button
+          type="button"
           className="logout-button"
           onClick={handleLogout}
         >
@@ -57,6 +58,7 @@ function DashboardPage() {
             </p>
 
             <button
+              type="button"
               className="view-users-button"
               onClick={handleViewUsers}
             >

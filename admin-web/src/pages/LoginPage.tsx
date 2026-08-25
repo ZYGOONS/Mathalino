@@ -100,28 +100,26 @@ function LoginPage() {
         </div>
 
         <div className="form-group">
-          <label>Email Address</label>
+        <label htmlFor="admin-email">Email Address</label>
 
           <input
+            id="admin-email"
             type="email"
             placeholder="Enter administrator email"
             value={email}
-            onChange={(event) =>
-              setEmail(event.target.value)
-            }
+            onChange={(event) => setEmail(event.target.value)}
           />
         </div>
 
         <div className="form-group">
-          <label>Password</label>
+          <label htmlFor="admin-password">Password</label>
 
           <input
+            id="admin-password"
             type="password"
             placeholder="Enter password"
             value={password}
-            onChange={(event) =>
-              setPassword(event.target.value)
-            }
+            onChange={(event) => setPassword(event.target.value)}
           />
         </div>
 
@@ -132,6 +130,7 @@ function LoginPage() {
         )}
 
         <button
+          type="button"
           className="login-button"
           onClick={handleLogin}
           disabled={loading}

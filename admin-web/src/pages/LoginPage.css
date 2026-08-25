@@ -85,7 +85,7 @@
   margin-top: 6px;
   border: none;
   border-radius: 10px;
-  background: #4f7cff;
+  background: #3f6ee8;  
   color: white;
   font-size: 15px;
   font-weight: 600;
@@ -93,13 +93,13 @@
 }
 
 .login-button:hover {
-  background: #3f6ee8;
+  background: #315fd6;
 }
 
 .admin-note {
   margin-top: 20px;
   text-align: center;
-  color: #8a8a8a;
+  color: #6b7280;
   font-size: 12px;
 }
 

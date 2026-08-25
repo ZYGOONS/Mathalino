@@ -15,7 +15,6 @@ function UserDetailsPage() {
   const { userId } = useParams();
 
   const [user, setUser] = useState<DocumentData | null>(null);
-  const [collectionName, setCollectionName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -56,7 +55,6 @@ function UserDetailsPage() {
             ...userSnapshot.data(),
           });
 
-          setCollectionName("users");
           return;
         }
 
@@ -71,7 +69,6 @@ function UserDetailsPage() {
             role: "learner",
           });
 
-          setCollectionName("learners");
           return;
         }
 
@@ -122,6 +119,7 @@ function UserDetailsPage() {
         </div>
 
         <button
+          type="button"
           className="back-users-button"
           onClick={() => navigate("/users")}
         >
@@ -149,6 +147,7 @@ function UserDetailsPage() {
             <p>{error}</p>
 
             <button
+              type="button"
               className="back-users-button"
               onClick={() => navigate("/users")}
             >

@@ -11,7 +11,9 @@ interface ProtectedRouteProps {
   children: ReactNode;
 }
 
-function ProtectedRoute({ children }: ProtectedRouteProps) {
+function ProtectedRoute({
+  children,
+}: Readonly<ProtectedRouteProps>) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
