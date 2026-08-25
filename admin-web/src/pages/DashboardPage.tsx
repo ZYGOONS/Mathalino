@@ -1,3 +1,5 @@
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase/firebase";
 import { useNavigate } from "react-router";
 import "./DashboardPage.css";
 
@@ -8,9 +10,13 @@ function DashboardPage() {
     navigate("/users");
   };
 
-  const handleLogout = () => {
-  localStorage.removeItem("mathalinoAdminLoggedIn");
-  navigate("/");
+  const handleLogout = async () => {
+  try {
+    await signOut(auth);
+    navigate("/");
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
   };
 
   return (
