@@ -3,116 +3,166 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f7fb;
-  padding: 24px;
+  padding: 32px 20px;
+  background: #f5faf9;
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
-  background: white;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+  max-width: 390px;
+  padding: 30px 28px 28px;
+  background: #ffffff;
+  border: 1px solid #d7e2df;
+  border-radius: 16px;
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.04),
+    0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .login-brand {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.login-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.login-brand-text h1 {
+  margin: 0;
+  color: #102d3c;
+  font-size: 21px;
+  font-weight: 750;
+  line-height: 1.1;
+}
+
+.login-brand-text p {
+  margin: 4px 0 0;
+  color: #71838b;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.login-heading {
   margin-bottom: 32px;
 }
 
-.login-brand h1 {
+.login-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: #008577;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.login-heading h2 {
   margin: 0;
-  font-size: 36px;
-  color: #222;
+  color: #102d3c;
+  font-size: 24px;
+  font-weight: 750;
+  line-height: 1.25;
 }
 
-.login-brand p {
-  margin-top: 8px;
-  color: #6b7280;
-  font-size: 15px;
-}
-
-.login-title {
-  margin-bottom: 24px;
-}
-
-.login-title h2 {
-  margin-bottom: 6px;
-  color: #222;
-  font-size: 22px;
-}
-
-.login-title p {
-  margin: 0;
-  color: #777;
-  font-size: 14px;
+.login-form {
+  display: flex;
+  flex-direction: column;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 18px;
+  gap: 9px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
-  font-size: 14px;
+  color: #334e5a;
+  font-size: 13px;
   font-weight: 600;
-  color: #333;
 }
 
 .form-group input {
   width: 100%;
-  box-sizing: border-box;
-  padding: 13px 14px;
-  border: 1px solid #d9dee8;
-  border-radius: 10px;
-  font-size: 15px;
+  height: 43px;
+  padding: 0 14px;
+  border: 1px solid #ccd9d6;
+  border-radius: 18px;
   outline: none;
-  background: white;
-  color: #222;
+  background: #ffffff;
+  color: #1f353f;
+  font: inherit;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form-group input::placeholder {
+  color: #9aa9ae;
 }
 
 .form-group input:focus {
-  border-color: #4f7cff;
-  box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.12);
+  border-color: #008577;
+  box-shadow: 0 0 0 3px rgba(0, 133, 119, 0.1);
+}
+
+.login-error {
+  margin: -5px 0 18px;
+  padding: 10px 12px;
+  border: 1px solid #f5c2c0;
+  border-radius: 10px;
+  background: #fff4f3;
+  color: #a52a24;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .login-button {
   width: 100%;
-  padding: 13px;
-  margin-top: 6px;
+  min-height: 38px;
+  margin-top: 4px;
   border: none;
-  border-radius: 10px;
-  background: #3f6ee8;  
-  color: white;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.login-button:hover {
-  background: #315fd6;
-}
-
-.admin-note {
-  margin-top: 20px;
-  text-align: center;
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.login-error {
-  margin: -4px 0 16px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #fff1f1;
-  color: #b42318;
+  border-radius: 20px;
+  background: #007d72;
+  color: #ffffff;
   font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.login-button:hover:not(:disabled) {
+  background: #006c63;
+}
+
+.login-button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .login-button:disabled {
-  opacity: 0.7;
   cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 20px 14px;
+  }
+
+  .login-card {
+    padding: 26px 22px;
+  }
+
+  .login-heading h2 {
+    font-size: 22px;
+  }
 }

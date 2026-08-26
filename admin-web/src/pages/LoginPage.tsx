@@ -1,16 +1,54 @@
-import { useState } from "react";
+import {
+  useState,
+  type SyntheticEvent,
+} from "react";
+
 import { useNavigate } from "react-router";
+
 import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
+
 import {
   doc,
   getDoc,
 } from "firebase/firestore";
 
 import { auth, db } from "../firebase/firebase";
+import mathalinoLogo from "../assets/mathalino-logo.png";
+
 import "./LoginPage.css";
+
+/*
+ * Converts Firebase authentication errors
+ * into user-friendly messages.
+ */
+function getLoginErrorMessage(error: unknown): string {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    !("code" in error)
+  ) {
+    return "Unable to sign in. Please try again.";
+  }
+
+  const firebaseError = error as { code: string };
+
+  switch (firebaseError.code) {
+    case "auth/invalid-credential":
+      return "Incorrect email or password.";
+
+    case "auth/too-many-requests":
+      return "Too many login attempts. Please try again later.";
+
+    case "auth/network-request-failed":
+      return "Network error. Please check your internet connection.";
+
+    default:
+      return "Unable to sign in. Please try again.";
+  }
+}
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -20,67 +58,103 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const loginAdmin = async () => {
     setError("");
 
-    if (!email || !password) {
-      setError("Please enter your email and password.");
+    if (!email.trim() || !password) {
+      setError(
+        "Please enter your email and password."
+      );
       return;
     }
 
     try {
       setLoading(true);
 
-      // 1. Authenticate email and password
+      /*
+       * Step 1:
+       * Authenticate using Firebase Authentication.
+       */
       const credential =
         await signInWithEmailAndPassword(
           auth,
-          email,
+          email.trim(),
           password
         );
 
       const uid = credential.user.uid;
 
-      // 2. Find this user in Firestore
-      const userRef = doc(db, "users", uid);
-      const userSnapshot = await getDoc(userRef);
+      /*
+       * Step 2:
+       * Find the corresponding Firestore user.
+       */
+      const userReference = doc(
+        db,
+        "users",
+        uid
+      );
 
+      const userSnapshot =
+        await getDoc(userReference);
+
+      /*
+       * Firebase Auth account exists,
+       * but Firestore profile does not.
+       */
       if (!userSnapshot.exists()) {
         await signOut(auth);
-        setError("User account information was not found.");
+
+        setError(
+          "Account information could not be found."
+        );
+
         return;
       }
 
       const userData = userSnapshot.data();
 
-      // 3. Verify administrator role
+      /*
+       * Only administrators may access
+       * the Mathalino Admin Web.
+       */
       if (userData.role !== "admin") {
         await signOut(auth);
+
         setError(
           "Access denied. This portal is for administrators only."
         );
+
         return;
       }
 
-      // 4. Open dashboard
+      /*
+       * Successful administrator login.
+       */
       navigate("/dashboard");
+    } catch (error: unknown) {
+      console.error(
+        "Firebase login error:",
+        error
+      );
 
-    } catch (error: any) {
-    console.error("Firebase login error:", error);
-
-    if (error.code === "auth/invalid-credential") {
-      setError("Incorrect email or password.");
-    } else if (error.code === "auth/too-many-requests") {
-      setError("Too many login attempts. Please try again later.");
-    } else if (error.code === "auth/network-request-failed") {
-      setError("Network error. Please check your internet connection.");
-    } else {
-      setError("Unable to sign in. Please try again.");
-    }
-
+      setError(
+        getLoginErrorMessage(error)
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  /*
+   * Keep the form event handler synchronous.
+   * Firebase login runs separately.
+   */
+  const handleLogin = (
+    event: SyntheticEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    void loginAdmin();
   };
 
   return (
@@ -88,59 +162,89 @@ function LoginPage() {
       <div className="login-card">
 
         <div className="login-brand">
-          <h1>Mathalino</h1>
-          <p>Smart Mathematics Learning Platform</p>
-        </div>
-
-        <div className="login-title">
-          <h2>Administrator Login</h2>
-          <p>
-            Sign in to access the administration portal.
-          </p>
-        </div>
-
-        <div className="form-group">
-        <label htmlFor="admin-email">Email Address</label>
-
-          <input
-            id="admin-email"
-            type="email"
-            placeholder="Enter administrator email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+          <img
+            src={mathalinoLogo}
+            alt="Mathalino Logo"
+            className="login-logo"
           />
+
+          <div className="login-brand-text">
+            <h1>Mathalino</h1>
+            <p>LEARN BY DOING</p>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="admin-password">Password</label>
+        <div className="login-heading">
+          <span className="login-eyebrow">
+            ADMINISTRATOR ACCESS
+          </span>
 
-          <input
-            id="admin-password"
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
+          <h2>
+            Log in to Mathalino
+          </h2>
         </div>
 
-        {error && (
-          <p className="login-error">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="button"
-          className="login-button"
-          onClick={handleLogin}
-          disabled={loading}
+        <form
+          className="login-form"
+          onSubmit={handleLogin}
         >
-          {loading ? "Signing In..." : "Log In"}
-        </button>
+          <div className="form-group">
+            <label htmlFor="admin-email">
+              Email
+            </label>
 
-        <p className="admin-note">
-          Authorized administrators only
-        </p>
+            <input
+              id="admin-email"
+              type="email"
+              value={email}
+              placeholder="admin@mathalino.edu"
+              autoComplete="email"
+              onChange={(event) =>
+                setEmail(
+                  event.target.value
+                )
+              }
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="admin-password">
+              Password
+            </label>
+
+            <input
+              id="admin-password"
+              type="password"
+              value={password}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              onChange={(event) =>
+                setPassword(
+                  event.target.value
+                )
+              }
+            />
+          </div>
+
+          {error && (
+            <div
+              className="login-error"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="login-button"
+            disabled={loading}
+          >
+            {loading
+              ? "Logging in..."
+              : "Log in"}
+          </button>
+        </form>
 
       </div>
     </div>

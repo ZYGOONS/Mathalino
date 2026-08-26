@@ -12,7 +12,7 @@ import {
 import { db } from "../firebase/firebase";
 import "./UserAccountsPage.css";
 
-type UserTab = "Teachers" | "Guardians" | "Learners";
+type UserTab = "Learners" | "Teachers" | "Guardians";
 
 interface AccountRow {
   id: string;
@@ -31,7 +31,11 @@ function formatTimestamp(value: unknown): string {
   const timestamp = value as Timestamp;
 
   if (typeof timestamp?.toDate === "function") {
-    return timestamp.toDate().toLocaleDateString();
+    return timestamp.toDate().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   }
 
   return "—";
@@ -62,28 +66,28 @@ function renderStatus(status: string) {
 
   if (normalizedStatus === "active") {
     return (
-      <span className="status active-status">
-        {status}
+      <span className="account-status account-status-active">
+        Active
       </span>
     );
   }
 
   if (normalizedStatus === "inactive") {
     return (
-      <span className="status inactive-status">
-        {status}
+      <span className="account-status account-status-inactive">
+        Inactive
       </span>
     );
   }
 
-  return status;
+  return <span className="account-muted">—</span>;
 }
 
 function UserAccountsPage() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] =
-    useState<UserTab>("Teachers");
+    useState<UserTab>("Learners");
 
   const [accounts, setAccounts] =
     useState<AccountRow[]>([]);
@@ -100,19 +104,19 @@ function UserAccountsPage() {
         let snapshot;
 
         if (activeTab === "Teachers") {
-          const teacherQuery = query(
-            collection(db, "users"),
-            where("role", "==", "teacher")
+          snapshot = await getDocs(
+            query(
+              collection(db, "users"),
+              where("role", "==", "teacher")
+            )
           );
-
-          snapshot = await getDocs(teacherQuery);
         } else if (activeTab === "Guardians") {
-          const guardianQuery = query(
-            collection(db, "users"),
-            where("role", "==", "guardian")
+          snapshot = await getDocs(
+            query(
+              collection(db, "users"),
+              where("role", "==", "guardian")
+            )
           );
-
-          snapshot = await getDocs(guardianQuery);
         } else {
           snapshot = await getDocs(
             collection(db, "learners")
@@ -125,7 +129,6 @@ function UserAccountsPage() {
 
             return {
               id: document.id,
-
               name: getDisplayName(data),
 
               email:
@@ -155,7 +158,7 @@ function UserAccountsPage() {
         );
 
         setError(
-          "Unable to load user accounts from Firebase."
+          "Unable to load user accounts."
         );
       } finally {
         setLoading(false);
@@ -165,237 +168,248 @@ function UserAccountsPage() {
     loadAccounts();
   }, [activeTab]);
 
-  const renderTeachersTable = () => {
-    return (
-      <table className="users-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>School</th>
-            <th>Registered</th>
-            <th></th>
-          </tr>
-        </thead>
+  const renderEmptyState = () => (
+    <tr>
+      <td
+        colSpan={5}
+        className="accounts-empty"
+      >
+        No {activeTab.toLowerCase()} found.
+      </td>
+    </tr>
+  );
 
-        <tbody>
-          {accounts.map((account) => (
-            <tr key={account.id}>
-              <td>{account.name}</td>
+  const renderLearners = () => (
+    <table className="accounts-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Account Status</th>
+          <th>Registered</th>
+          <th></th>
+        </tr>
+      </thead>
 
-              <td>{account.email}</td>
+      <tbody>
+        {accounts.length === 0
+          ? renderEmptyState()
+          : accounts.map((account) => (
+              <tr key={account.id}>
+                <td className="account-name">
+                  {account.name}
+                </td>
 
-              <td>{account.school}</td>
+                <td>Learner</td>
 
-              <td>{account.registered}</td>
+                <td>
+                  {renderStatus(account.status)}
+                </td>
 
-              <td>
-                <button
-                  type="button"
-                  className="view-details-button"
-                  onClick={() =>
-                    navigate(`/users/${account.id}`)
-                  }
-                >
-                  View Details
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
+                <td>{account.registered}</td>
 
-  const renderGuardiansTable = () => {
-    return (
-      <table className="users-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Registered</th>
-            <th></th>
-          </tr>
-        </thead>
+                <td>
+                  <button
+                    type="button"
+                    className="account-details-button"
+                    onClick={() =>
+                      navigate(
+                        `/users/${account.id}`
+                      )
+                    }
+                  >
+                    View details
+                  </button>
+                </td>
+              </tr>
+            ))}
+      </tbody>
+    </table>
+  );
 
-        <tbody>
-          {accounts.map((account) => (
-            <tr key={account.id}>
-              <td>{account.name}</td>
+  const renderTeachers = () => (
+    <table className="accounts-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>School</th>
+          <th>Registered</th>
+          <th></th>
+        </tr>
+      </thead>
 
-              <td>{account.email}</td>
+      <tbody>
+        {accounts.length === 0
+          ? renderEmptyState()
+          : accounts.map((account) => (
+              <tr key={account.id}>
+                <td className="account-name">
+                  {account.name}
+                </td>
 
-              <td>{account.registered}</td>
+                <td>{account.email}</td>
 
-              <td>
-                <button
-                  type="button"
-                  className="view-details-button"
-                  onClick={() =>
-                    navigate(`/users/${account.id}`)
-                  }
-                >
-                  View Details
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
+                <td>{account.school}</td>
 
-  const renderLearnersTable = () => {
-    return (
-      <table className="users-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Registered</th>
-            <th></th>
-          </tr>
-        </thead>
+                <td>{account.registered}</td>
 
-        <tbody>
-          {accounts.map((account) => (
-            <tr key={account.id}>
-              <td>{account.name}</td>
+                <td>
+                  <button
+                    type="button"
+                    className="account-details-button"
+                    onClick={() =>
+                      navigate(
+                        `/users/${account.id}`
+                      )
+                    }
+                  >
+                    View details
+                  </button>
+                </td>
+              </tr>
+            ))}
+      </tbody>
+    </table>
+  );
 
-              <td>{renderStatus(account.status)}</td>
+  const renderGuardians = () => (
+    <table className="accounts-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Email</th>
+          <th>Registered</th>
+          <th></th>
+        </tr>
+      </thead>
 
-              <td>{account.registered}</td>
+      <tbody>
+        {accounts.length === 0
+          ? renderEmptyState()
+          : accounts.map((account) => (
+              <tr key={account.id}>
+                <td className="account-name">
+                  {account.name}
+                </td>
 
-              <td>
-                <button
-                  type="button"
-                  className="view-details-button"
-                  onClick={() =>
-                    navigate(`/users/${account.id}`)
-                  }
-                >
-                  View Details
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
+                <td>Guardian</td>
+
+                <td>{account.email}</td>
+
+                <td>{account.registered}</td>
+
+                <td>
+                  <button
+                    type="button"
+                    className="account-details-button"
+                    onClick={() =>
+                      navigate(
+                        `/users/${account.id}`
+                      )
+                    }
+                  >
+                    View details
+                  </button>
+                </td>
+              </tr>
+            ))}
+      </tbody>
+    </table>
+  );
 
   const renderTable = () => {
-    if (accounts.length === 0) {
-      return (
-        <div className="users-table-container">
-          <p
-            style={{
-              textAlign: "center",
-              padding: "30px",
-              color: "#6b7280",
-            }}
-          >
-            No {activeTab.toLowerCase()} found.
-          </p>
-        </div>
-      );
+    if (activeTab === "Learners") {
+      return renderLearners();
     }
 
-    return (
-      <div className="users-table-container">
-        {activeTab === "Teachers" &&
-          renderTeachersTable()}
+    if (activeTab === "Teachers") {
+      return renderTeachers();
+    }
 
-        {activeTab === "Guardians" &&
-          renderGuardiansTable()}
-
-        {activeTab === "Learners" &&
-          renderLearnersTable()}
-      </div>
-    );
+    return renderGuardians();
   };
 
   return (
-    <div className="users-page">
-      <header className="users-header">
-        <div>
-          <h2>Mathalino</h2>
-          <p>Administration Portal</p>
-        </div>
+    <div className="accounts-page">
+      <div className="accounts-shell">
+        <div className="accounts-card">
 
-        <button
-          type="button"
-          className="back-dashboard-button"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back to Dashboard
-        </button>
-      </header>
+          <div className="accounts-header">
+            <div>
+              <span className="accounts-eyebrow">
+                ADMINISTRATOR · VIEW ONLY
+              </span>
 
-      <main className="users-content">
-        <div className="users-title">
-          <h1>User Accounts</h1>
+              <h1>User accounts</h1>
+            </div>
 
-          <p>
-            View registered teacher, guardian,
-            and learner accounts.
-          </p>
-        </div>
-
-        <div className="user-tabs">
-          {(
-            [
-              "Teachers",
-              "Guardians",
-              "Learners",
-            ] as UserTab[]
-          ).map((tab) => (
             <button
               type="button"
-              key={tab}
-              className={
-                activeTab === tab
-                  ? "tab active-tab"
-                  : "tab"
+              className="accounts-back-button"
+              onClick={() =>
+                navigate("/dashboard")
               }
-              onClick={() => setActiveTab(tab)}
             >
-              {tab}
+              Back
             </button>
-          ))}
+          </div>
+
+          <div
+            className="accounts-tabs"
+            role="tablist"
+            aria-label="User account type"
+          >
+            {(
+              [
+                "Learners",
+                "Teachers",
+                "Guardians",
+              ] as UserTab[]
+            ).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={
+                  activeTab === tab
+                }
+                className={
+                  activeTab === tab
+                    ? "accounts-tab accounts-tab-active"
+                    : "accounts-tab"
+                }
+                onClick={() =>
+                  setActiveTab(tab)
+                }
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="accounts-table-wrapper">
+            {loading && (
+              <div className="accounts-message">
+                Loading{" "}
+                {activeTab.toLowerCase()}...
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="accounts-message accounts-error">
+                {error}
+              </div>
+            )}
+
+            {!loading &&
+              !error &&
+              renderTable()}
+          </div>
+
         </div>
-
-        {loading && (
-          <div className="users-table-container">
-            <p
-              style={{
-                textAlign: "center",
-                padding: "30px",
-                color: "#6b7280",
-              }}
-            >
-              Loading {activeTab.toLowerCase()}...
-            </p>
-          </div>
-        )}
-
-        {!loading && error && (
-          <div className="users-table-container">
-            <p
-              style={{
-                textAlign: "center",
-                padding: "30px",
-                color: "#b42318",
-              }}
-            >
-              {error}
-            </p>
-          </div>
-        )}
-
-        {!loading && !error && renderTable()}
-      </main>
+      </div>
     </div>
   );
 }

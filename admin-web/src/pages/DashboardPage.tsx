@@ -1,6 +1,9 @@
-import { signOut } from "firebase/auth";
-import { auth } from "../firebase/firebase";
 import { useNavigate } from "react-router";
+import { signOut } from "firebase/auth";
+
+import { auth } from "../firebase/firebase";
+import mathalinoLogo from "../assets/mathalino-logo.png";
+
 import "./DashboardPage.css";
 
 function DashboardPage() {
@@ -11,64 +14,85 @@ function DashboardPage() {
   };
 
   const handleLogout = async () => {
-  try {
-    await signOut(auth);
-    navigate("/");
-  } catch (error) {
-    console.error("Logout error:", error);
-  }
+    try {
+      await signOut(auth);
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
     <div className="dashboard-page">
+      <div className="dashboard-card">
 
-      <header className="dashboard-header">
         <div className="dashboard-brand">
-          <h2>Mathalino</h2>
-          <p>Administration Portal</p>
+          <img
+            src={mathalinoLogo}
+            alt="Mathalino Logo"
+            className="dashboard-logo"
+          />
+
+          <div className="dashboard-brand-text">
+            <h1>Mathalino</h1>
+            <p>LEARN BY DOING</p>
+          </div>
         </div>
 
-        <button
-          type="button"
-          className="logout-button"
-          onClick={handleLogout}
-        >
-          Log Out
-        </button>
-      </header>
+        <div className="dashboard-heading">
+          <span className="dashboard-eyebrow">
+            ADMINISTRATOR
+          </span>
 
-      <main className="dashboard-content">
+          <h2>Welcome back.</h2>
 
-        <section className="dashboard-welcome">
-          <h1>Administrator Dashboard</h1>
           <p>
-            Welcome to the Mathalino administration portal.
+            Manage and view Mathalino user accounts.
           </p>
-        </section>
+        </div>
 
-        <section className="management-section">
-          <h3>Administration</h3>
+        <div className="dashboard-actions">
+          <button
+            type="button"
+            className="dashboard-action primary-action"
+            onClick={handleViewUsers}
+          >
+            <span className="action-icon">
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </span>
 
-          <div className="management-card">
-            <h2>User Account Management</h2>
+            <span>View user accounts</span>
+          </button>
 
-            <p>
-              View registered teacher, guardian, and learner
-              accounts within the Mathalino platform.
-            </p>
+          <button
+            type="button"
+            className="dashboard-action secondary-action"
+            onClick={handleLogout}
+          >
+            <span className="action-icon">
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </span>
 
-            <button
-              type="button"
-              className="view-users-button"
-              onClick={handleViewUsers}
-            >
-              View User Accounts
-            </button>
-          </div>
-        </section>
+            <span>Log out</span>
+          </button>
+        </div>
 
-      </main>
-
+      </div>
     </div>
   );
 }
