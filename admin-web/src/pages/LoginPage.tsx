@@ -20,10 +20,6 @@ import mathalinoLogo from "../assets/mathalino-logo.png";
 
 import "./LoginPage.css";
 
-/*
- * Converts Firebase authentication errors
- * into user-friendly messages.
- */
 function getLoginErrorMessage(error: unknown): string {
   if (
     typeof error !== "object" ||
@@ -58,23 +54,17 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const loginAdmin = async () => {
+  const loginUser = async () => {
     setError("");
 
     if (!email.trim() || !password) {
-      setError(
-        "Please enter your email and password."
-      );
+      setError("Please enter your email and password.");
       return;
     }
 
     try {
       setLoading(true);
 
-      /*
-       * Step 1:
-       * Authenticate using Firebase Authentication.
-       */
       const credential =
         await signInWithEmailAndPassword(
           auth,
@@ -84,10 +74,6 @@ function LoginPage() {
 
       const uid = credential.user.uid;
 
-      /*
-       * Step 2:
-       * Find the corresponding Firestore user.
-       */
       const userReference = doc(
         db,
         "users",
@@ -97,10 +83,6 @@ function LoginPage() {
       const userSnapshot =
         await getDoc(userReference);
 
-      /*
-       * Firebase Auth account exists,
-       * but Firestore profile does not.
-       */
       if (!userSnapshot.exists()) {
         await signOut(auth);
 
@@ -112,25 +94,23 @@ function LoginPage() {
       }
 
       const userData = userSnapshot.data();
+      const role = userData.role;
 
-      /*
-       * Only administrators may access
-       * the Mathalino Admin Web.
-       */
-      if (userData.role !== "admin") {
-        await signOut(auth);
-
-        setError(
-          "Access denied. This portal is for administrators only."
-        );
-
+      if (role === "admin") {
+        navigate("/dashboard");
         return;
       }
 
-      /*
-       * Successful administrator login.
-       */
-      navigate("/dashboard");
+      if (role === "teacher") {
+        navigate("/teacher-dashboard");
+        return;
+      }
+
+      await signOut(auth);
+
+      setError(
+        "This account does not have access to the Mathalino Web Portal."
+      );
     } catch (error: unknown) {
       console.error(
         "Firebase login error:",
@@ -145,16 +125,12 @@ function LoginPage() {
     }
   };
 
-  /*
-   * Keep the form event handler synchronous.
-   * Firebase login runs separately.
-   */
   const handleLogin = (
     event: SyntheticEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 
-    void loginAdmin();
+    void loginUser();
   };
 
   return (
@@ -176,7 +152,7 @@ function LoginPage() {
 
         <div className="login-heading">
           <span className="login-eyebrow">
-            ADMINISTRATOR ACCESS
+            WEB PORTAL ACCESS
           </span>
 
           <h2>
@@ -189,39 +165,35 @@ function LoginPage() {
           onSubmit={handleLogin}
         >
           <div className="form-group">
-            <label htmlFor="admin-email">
+            <label htmlFor="email">
               Email
             </label>
 
             <input
-              id="admin-email"
+              id="email"
               type="email"
               value={email}
-              placeholder="admin@mathalino.edu"
+              placeholder="Enter your email"
               autoComplete="email"
               onChange={(event) =>
-                setEmail(
-                  event.target.value
-                )
+                setEmail(event.target.value)
               }
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="admin-password">
+            <label htmlFor="password">
               Password
             </label>
 
             <input
-              id="admin-password"
+              id="password"
               type="password"
               value={password}
               placeholder="••••••••"
               autoComplete="current-password"
               onChange={(event) =>
-                setPassword(
-                  event.target.value
-                )
+                setPassword(event.target.value)
               }
             />
           </div>

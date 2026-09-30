@@ -1,84 +1,160 @@
-import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+
 import { Navigate } from "react-router";
 
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  onAuthStateChanged,
+  type User,
+} from "firebase/auth";
 
-import { auth, db } from "../firebase/firebase";
+import {
+  doc,
+  getDoc,
+} from "firebase/firestore";
+
+import {
+  auth,
+  db,
+} from "../firebase/firebase";
 
 interface ProtectedRouteProps {
   children: ReactNode;
+  allowedRole: "admin" | "teacher";
 }
+
+type AccessStatus =
+  | "checking"
+  | "allowed"
+  | "denied";
 
 function ProtectedRoute({
   children,
+  allowedRole,
 }: Readonly<ProtectedRouteProps>) {
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [accessStatus, setAccessStatus] =
+    useState<AccessStatus>("checking");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      // No Firebase user is logged in
-      if (!user) {
-        setIsAdmin(false);
-        setLoading(false);
-        return;
-      }
+    let active = true;
 
+    const checkUserRole = async (
+      user: User
+    ) => {
       try {
-        // Look for the logged-in user in Firestore
-        const userRef = doc(db, "users", user.uid);
-        const userSnapshot = await getDoc(userRef);
+        const userReference = doc(
+          db,
+          "users",
+          user.uid
+        );
+
+        const userSnapshot =
+          await getDoc(userReference);
+
+        if (!active) {
+          return;
+        }
 
         if (!userSnapshot.exists()) {
-          await signOut(auth);
-          setIsAdmin(false);
-          setLoading(false);
+          console.error(
+            "No Firestore user document found for:",
+            user.uid
+          );
+
+          setAccessStatus("denied");
           return;
         }
 
-        const userData = userSnapshot.data();
+        const userData =
+          userSnapshot.data();
 
-        // Only administrators may access protected web pages
-        if (userData.role !== "admin") {
-          await signOut(auth);
-          setIsAdmin(false);
-          setLoading(false);
+        const userRole =
+          userData.role;
+
+        console.log(
+          "Authenticated UID:",
+          user.uid
+        );
+
+        console.log(
+          "Firestore role:",
+          userRole
+        );
+
+        console.log(
+          "Required role:",
+          allowedRole
+        );
+
+        if (userRole === allowedRole) {
+          setAccessStatus("allowed");
           return;
         }
 
-        setIsAdmin(true);
+        setAccessStatus("denied");
       } catch (error) {
-        console.error("Protected route error:", error);
+        console.error(
+          "Protected route error:",
+          error
+        );
 
-        await signOut(auth);
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
+        if (active) {
+          setAccessStatus("denied");
+        }
       }
-    });
+    };
 
-    return () => unsubscribe();
-  }, []);
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        (user) => {
+          if (!active) {
+            return;
+          }
 
-  if (loading) {
+          if (!user) {
+            setAccessStatus("denied");
+            return;
+          }
+
+          void checkUserRole(user);
+        }
+      );
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [allowedRole]);
+
+  if (accessStatus === "checking") {
     return (
       <div
         style={{
           minHeight: "100vh",
           display: "flex",
-          justifyContent: "center",
           alignItems: "center",
+          justifyContent: "center",
+          background: "#f3f8f7",
+          color: "#102d3c",
+          fontFamily: "inherit",
         }}
       >
-        Checking administrator access...
+        Checking account access...
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
+  if (accessStatus === "denied") {
+    return (
+      <Navigate
+        to="/"
+        replace
+      />
+    );
   }
 
   return children;

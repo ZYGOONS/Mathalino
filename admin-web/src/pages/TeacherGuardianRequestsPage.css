@@ -1,0 +1,364 @@
+.teacher-requests-heading {
+  width: 100%;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 28px;
+}
+
+.teacher-requests-eyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #007d72;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.teacher-requests-heading h2 {
+  margin: 0;
+
+  color: #102d3c;
+
+  font-size: 30px;
+  font-weight: 750;
+}
+
+.teacher-requests-heading p {
+  margin: 8px 0 0;
+
+  color: #71838b;
+
+  font-size: 14px;
+}
+
+/* TOTAL */
+
+.teacher-requests-total {
+  min-width: 165px;
+
+  padding: 16px 20px;
+
+  border:
+    1px solid #d6e3e0;
+
+  border-radius: 15px;
+
+  background: #ffffff;
+}
+
+.teacher-requests-total span {
+  display: block;
+
+  color: #71858a;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.2px;
+}
+
+.teacher-requests-total strong {
+  display: block;
+
+  margin-top: 6px;
+
+  color: #102d3c;
+
+  font-size: 26px;
+}
+
+/* CARD */
+
+.teacher-requests-card {
+  width: 100%;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border:
+    1px solid #d7e2df;
+
+  border-radius: 18px;
+}
+
+.teacher-requests-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 24px 26px;
+
+  border-bottom:
+    1px solid #e1e9e7;
+}
+
+.teacher-requests-toolbar h3 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 18px;
+}
+
+.teacher-requests-toolbar p {
+  margin: 5px 0 0;
+
+  color: #7b8d92;
+
+  font-size: 12px;
+}
+
+/* FILTER */
+
+.teacher-request-tabs {
+  display: flex;
+
+  gap: 5px;
+
+  padding: 4px;
+
+  border-radius: 22px;
+
+  background: #edf4f2;
+}
+
+.teacher-request-tab {
+  min-height: 33px;
+
+  padding: 0 13px;
+
+  border: none;
+
+  border-radius: 18px;
+
+  background: transparent;
+
+  color: #667b81;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-request-tab.active {
+  background: #ffffff;
+
+  color: #007d72;
+
+  box-shadow:
+    0 1px 4px
+    rgba(15, 23, 42, 0.08);
+}
+
+/* TABLE */
+
+.teacher-requests-table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+.teacher-requests-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  font-size: 13px;
+}
+
+.teacher-requests-table th {
+  padding: 14px 20px;
+
+  background: #f8fbfa;
+
+  border-bottom:
+    1px solid #dce7e4;
+
+  color: #70848a;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.1px;
+
+  text-align: left;
+
+  text-transform: uppercase;
+}
+
+.teacher-requests-table td {
+  padding: 17px 20px;
+
+  border-bottom:
+    1px solid #e6edeb;
+
+  color: #536a72;
+}
+
+.teacher-requests-table
+  tbody
+  tr:last-child
+  td {
+  border-bottom: none;
+}
+
+.teacher-request-guardian {
+  color: #153844 !important;
+
+  font-weight: 700;
+}
+
+/* STATUS */
+
+.teacher-request-status {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 25px;
+
+  padding: 0 11px;
+
+  border-radius: 14px;
+
+  background: #f0f3f3;
+
+  color: #53666b;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.teacher-request-status.pending {
+  background: #fff4d8;
+
+  color: #745800;
+}
+
+.teacher-request-status.approved {
+  background: #e4f5ec;
+
+  color: #0f6f49;
+}
+
+.teacher-request-status.rejected {
+  background: #fde9e7;
+
+  color: #922f29;
+}
+
+/* ACTIONS */
+
+.teacher-request-actions {
+  display: flex;
+
+  gap: 7px;
+}
+
+.teacher-request-approve,
+.teacher-request-reject {
+  min-height: 30px;
+
+  padding: 0 12px;
+
+  border-radius: 16px;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-request-approve {
+  border: 1px solid #007d72;
+
+  background: #007d72;
+
+  color: #ffffff;
+}
+
+.teacher-request-reject {
+  border:
+    1px solid #cbd9d6;
+
+  background: #ffffff;
+
+  color: #53666b;
+}
+
+.teacher-request-complete {
+  color: #829297;
+
+  font-size: 11px;
+}
+
+/* MESSAGE */
+
+.teacher-requests-message {
+  padding: 50px 24px;
+
+  color: #70828a;
+
+  text-align: center;
+
+  font-size: 13px;
+}
+
+.teacher-requests-error {
+  margin: 18px 24px 0;
+
+  padding: 11px 14px;
+
+  border:
+    1px solid #efc4c0;
+
+  border-radius: 10px;
+
+  background: #fff4f3;
+
+  color: #922f29;
+
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .teacher-requests-heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .teacher-requests-total {
+    width: 100%;
+  }
+
+  .teacher-requests-toolbar {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .teacher-request-tabs {
+    width: 100%;
+
+    overflow-x: auto;
+  }
+
+  .teacher-requests-table {
+    min-width: 900px;
+  }
+}
