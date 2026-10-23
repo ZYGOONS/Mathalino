@@ -1,0 +1,824 @@
+.teacher-live-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 20px;
+}
+
+.teacher-live-eyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #007d72;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.teacher-live-heading h2 {
+  margin: 0;
+
+  color: #102d3c;
+
+  font-size: 30px;
+  font-weight: 750;
+}
+
+.teacher-live-heading p {
+  margin: 8px 0 0;
+
+  color: #71838b;
+
+  font-size: 14px;
+}
+
+/* =========================
+   ACTIVE SESSION COUNT
+   ========================= */
+
+.teacher-live-summary {
+  min-width: 125px;
+
+  padding: 14px 18px;
+
+  border: 1px solid #cfe2dd;
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  text-align: center;
+}
+
+.teacher-live-summary strong {
+  display: block;
+
+  color: #007d72;
+
+  font-size: 23px;
+}
+
+.teacher-live-summary span {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #71838b;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* =========================
+   NOTICE
+   ========================= */
+
+.teacher-live-notice {
+  margin-bottom: 20px;
+
+  padding: 12px 15px;
+
+  border: 1px solid #cfe2dd;
+  border-radius: 12px;
+
+  background: #eff8f5;
+
+  color: #45666a;
+
+  font-size: 12px;
+}
+
+/* =========================
+   BOARD LIST
+   ========================= */
+
+.teacher-live-board-list {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 18px;
+}
+
+.teacher-live-card {
+  overflow: hidden;
+
+  padding: 22px;
+
+  border: 1px solid #d7e2df;
+  border-radius: 18px;
+
+  background: #ffffff;
+}
+
+.teacher-live-card.active {
+  border-color: #9accc1;
+
+  box-shadow:
+    0 5px 18px
+    rgba(
+      0,
+      125,
+      114,
+      0.06
+    );
+}
+
+/* =========================
+   BOARD HEADER
+   ========================= */
+
+.teacher-live-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  padding-bottom: 17px;
+
+  border-bottom: 1px solid #e6edeb;
+}
+
+.teacher-live-card-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #007d72;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.2px;
+}
+
+.teacher-live-card-header h3 {
+  margin: 0;
+
+  color: #123b45;
+
+  font-size: 18px;
+}
+
+.teacher-live-board-id,
+.teacher-live-room {
+  margin: 4px 0 0;
+
+  color: #7b8b90;
+
+  font-size: 11px;
+}
+
+.teacher-live-card-statuses {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+/* =========================
+   CONNECTION
+   ========================= */
+
+.teacher-live-connection {
+  display: inline-flex;
+
+  padding: 6px 10px;
+
+  border-radius: 14px;
+
+  font-size: 9px;
+  font-weight: 750;
+
+  white-space: nowrap;
+}
+
+.teacher-live-connection.connected {
+  background: #e4f5ec;
+
+  color: #0f6f49;
+}
+
+.teacher-live-connection.stale {
+  background: #fff4d8;
+
+  color: #806000;
+}
+
+.teacher-live-connection.unknown {
+  background: #eef1f1;
+
+  color: #53666b;
+}
+
+.teacher-live-active-badge {
+  display: inline-flex;
+
+  padding: 5px 10px;
+
+  border-radius: 13px;
+
+  background: #007d72;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+/* =========================
+   IDLE BOARD
+   ========================= */
+
+.teacher-live-idle {
+  margin-top: 18px;
+
+  padding: 18px;
+
+  border-radius: 13px;
+
+  background: #f4f8f7;
+}
+
+.teacher-live-idle span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #71858a;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 1.1px;
+}
+
+.teacher-live-idle strong {
+  display: block;
+
+  color: #153844;
+
+  font-size: 13px;
+}
+
+.teacher-live-idle p {
+  margin: 6px 0 0;
+
+  color: #829196;
+
+  font-size: 11px;
+}
+
+/* =========================
+   LIVE SESSION INFORMATION
+   ========================= */
+
+.teacher-live-session-main {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 12px;
+
+  margin-top: 18px;
+}
+
+.teacher-live-session-person,
+.teacher-live-session-activity {
+  padding: 14px;
+
+  border-radius: 13px;
+
+  background: #f4f8f7;
+}
+
+.teacher-live-session-main span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #71858a;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 1.1px;
+}
+
+.teacher-live-session-person h4 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 16px;
+}
+
+.teacher-live-session-activity strong {
+  display: block;
+
+  color: #153844;
+
+  font-size: 13px;
+}
+
+.teacher-live-session-activity small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #819095;
+
+  font-size: 10px;
+}
+
+/* =========================
+   QUESTION PROGRESS
+   ========================= */
+
+.teacher-live-progress-section {
+  margin-top: 17px;
+
+  padding: 15px;
+
+  border: 1px solid #dce7e4;
+  border-radius: 13px;
+}
+
+.teacher-live-progress-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 15px;
+}
+
+.teacher-live-progress-heading div > span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #71858a;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 1.1px;
+}
+
+.teacher-live-progress-heading strong {
+  color: #153844;
+
+  font-size: 13px;
+}
+
+.teacher-live-progress-count {
+  color: #71838b;
+
+  font-size: 10px;
+}
+
+.teacher-live-progress-track {
+  height: 7px;
+
+  overflow: hidden;
+
+  margin-top: 13px;
+
+  border-radius: 999px;
+
+  background: #e2ece9;
+}
+
+.teacher-live-progress-fill {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #007d72;
+
+  transition:
+    width 0.25s ease;
+}
+
+/* =========================
+   BOARD DISPLAY
+   ========================= */
+
+.teacher-live-screen-section {
+  margin-top: 17px;
+}
+
+.teacher-live-screen-label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #71858a;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 1.1px;
+}
+
+.teacher-live-screen {
+  min-height: 60px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 15px 17px;
+
+  border: 1px solid #dce7e4;
+  border-radius: 13px;
+
+  background: #f4f8f7;
+
+  color: #153844;
+
+  font-size: 18px;
+  font-weight: 650;
+
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+/* =========================
+   SESSION ACTIONS
+   ========================= */
+
+.teacher-live-actions {
+  margin-top: 18px;
+
+  padding-top: 17px;
+
+  border-top: 1px solid #e6edeb;
+}
+
+.teacher-live-cancel-button {
+  min-height: 37px;
+
+  padding: 0 16px;
+
+  border: 1px solid #d9aaa5;
+  border-radius: 19px;
+
+  background: #ffffff;
+
+  color: #97372f;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-live-cancel-button:hover:not(:disabled) {
+  background: #fff4f3;
+}
+
+.teacher-live-cancel-button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+/* =========================
+   ERROR / LOADING
+   ========================= */
+
+.teacher-live-error {
+  margin-bottom: 16px;
+
+  padding: 11px 14px;
+
+  border: 1px solid #efc4c0;
+  border-radius: 10px;
+
+  background: #fff4f3;
+
+  color: #922f29;
+
+  font-size: 12px;
+}
+
+.teacher-live-loading {
+  padding: 60px 20px;
+
+  color: #70828a;
+
+  text-align: center;
+
+  font-size: 13px;
+}
+
+/* =========================
+   EMPTY STATE
+   ========================= */
+
+.teacher-live-empty {
+  padding: 55px 24px;
+
+  border: 1px solid #d7e2df;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  text-align: center;
+}
+
+.teacher-live-empty-icon {
+  width: 48px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0 auto 14px;
+
+  border-radius: 14px;
+
+  background: #e4f4f0;
+
+  color: #007d72;
+
+  font-size: 22px;
+}
+
+.teacher-live-empty h3 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 18px;
+}
+
+.teacher-live-empty p {
+  margin: 8px 0 18px;
+
+  color: #71838b;
+
+  font-size: 12px;
+}
+
+.teacher-live-empty button {
+  min-height: 38px;
+
+  padding: 0 17px;
+
+  border: none;
+  border-radius: 20px;
+
+  background: #007d72;
+
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+/* =========================
+   CANCEL MODAL
+   ========================= */
+
+.teacher-live-modal-backdrop {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    rgba(
+      16,
+      45,
+      60,
+      0.35
+    );
+}
+
+.teacher-live-modal {
+  width: 100%;
+  max-width: 430px;
+
+  padding: 25px;
+
+  border: 1px solid #d4e0dd;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 18px 55px
+    rgba(
+      15,
+      23,
+      42,
+      0.15
+    );
+}
+
+.teacher-live-modal-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #007d72;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.3px;
+}
+
+.teacher-live-modal h3 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 20px;
+}
+
+.teacher-live-modal > p {
+  margin: 11px 0 0;
+
+  color: #677b81;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+.teacher-live-modal-details {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 10px;
+
+  margin-top: 18px;
+}
+
+.teacher-live-modal-details > div {
+  padding: 12px;
+
+  border-radius: 11px;
+
+  background: #f4f8f7;
+}
+
+.teacher-live-modal-details span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #71858a;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+}
+
+.teacher-live-modal-details strong {
+  color: #153844;
+
+  font-size: 11px;
+}
+
+.teacher-live-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 9px;
+
+  margin-top: 23px;
+}
+
+.teacher-live-keep-button,
+.teacher-live-confirm-cancel {
+  min-height: 38px;
+
+  padding: 0 16px;
+
+  border-radius: 20px;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-live-keep-button {
+  border: 1px solid #cbd9d6;
+
+  background: #ffffff;
+
+  color: #53666b;
+}
+
+.teacher-live-confirm-cancel {
+  border: 1px solid #a83b34;
+
+  background: #a83b34;
+
+  color: #ffffff;
+}
+
+.teacher-live-keep-button:disabled,
+.teacher-live-confirm-cancel:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 950px) {
+  .teacher-live-board-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .teacher-live-heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .teacher-live-summary {
+    width: 100%;
+
+    box-sizing: border-box;
+  }
+
+  .teacher-live-card-header {
+    flex-direction: column;
+  }
+
+  .teacher-live-card-statuses {
+    align-items: flex-start;
+  }
+
+  .teacher-live-session-main {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-live-progress-heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .teacher-live-modal-details {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-live-modal-actions {
+    flex-direction: column;
+  }
+
+  .teacher-live-keep-button,
+  .teacher-live-confirm-cancel {
+    width: 100%;
+  }
+}

@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+import type {
+  ReactNode,
+} from "react";
 
 import {
   useLocation,
@@ -13,6 +15,18 @@ import {
   auth,
 } from "../firebase/firebase";
 
+import {
+  useRfidAutoStart,
+} from "../hooks/useRfidAutoStart";
+
+import {
+  useAnswerSubmissionProcessing,
+} from "../hooks/useAnswerSubmissionProcessing";
+
+import {
+  useResultSynchronization,
+} from "../hooks/useResultSynchronization";
+
 import mathalinoLogo from "../assets/mathalino-logo.png";
 
 import "./TeacherLayout.css";
@@ -26,42 +40,114 @@ interface NavigationItem {
   path: string;
 }
 
-const navigationItems: NavigationItem[] = [
-  {
-    label: "Dashboard",
-    path: "/teacher-dashboard",
-  },
-  {
-    label: "My Learners",
-    path: "/teacher/learners",
-  },
-  {
-    label: "Activities",
-    path: "/teacher/activities",
-  },
-  {
-    label: "Guardian Requests",
-    path: "/teacher/guardian-requests",
-  },
-  {
-    label: "Account",
-    path: "/teacher/account",
-  },
-];
+const navigationItems:
+  NavigationItem[] = [
+    {
+      label:
+        "Dashboard",
+
+      path:
+        "/teacher-dashboard",
+    },
+
+    {
+      label:
+        "My Learners",
+
+      path:
+        "/teacher/learners",
+    },
+
+    {
+      label:
+        "Activities",
+
+      path:
+        "/teacher/activities",
+    },
+
+    {
+      label:
+        "Guardian Requests",
+
+      path:
+        "/teacher/guardian-requests",
+    },
+
+    {
+      label:
+        "Smart Boards",
+
+      path:
+        "/teacher/boards",
+    },
+
+    {
+      label:
+        "Live Sessions",
+
+      path:
+        "/teacher/live-sessions",
+    },
+
+    {
+      label:
+        "Account",
+
+      path:
+        "/teacher/account",
+    },
+  ];
 
 function TeacherLayout({
   children,
 }: Readonly<TeacherLayoutProps>) {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate =
+    useNavigate();
+
+  const location =
+    useLocation();
+
+  /*
+   * =========================
+   * BACKGROUND PROCESSORS
+   * =========================
+   */
+
+  /*
+   * RFID card tap
+   * → start activity.
+   */
+  useRfidAutoStart();
+
+  /*
+   * Smart Board answer
+   * → grade / advance question.
+   */
+  useAnswerSubmissionProcessing();
+
+  /*
+   * Completed session
+   * → assignment result
+   * → mastery
+   * → recommendation
+   * → resultSynced.
+   */
+  useResultSynchronization();
 
   const handleLogout =
     async () => {
       try {
-        await signOut(auth);
+        await signOut(
+          auth
+        );
 
-        navigate("/");
-      } catch (error) {
+        navigate(
+          "/"
+        );
+      } catch (
+        error
+      ) {
         console.error(
           "Teacher logout error:",
           error
@@ -73,7 +159,8 @@ function TeacherLayout({
     path: string
   ) => {
     return (
-      location.pathname === path
+      location.pathname ===
+      path
     );
   };
 
@@ -87,12 +174,15 @@ function TeacherLayout({
           <div className="teacher-layout-brand">
 
             <img
-              src={mathalinoLogo}
+              src={
+                mathalinoLogo
+              }
               alt="Mathalino Logo"
               className="teacher-layout-logo"
             />
 
             <div>
+
               <h1>
                 Mathalino
               </h1>
@@ -100,6 +190,7 @@ function TeacherLayout({
               <p>
                 LEARN BY DOING
               </p>
+
             </div>
 
           </div>
@@ -107,9 +198,13 @@ function TeacherLayout({
           <nav className="teacher-layout-nav">
 
             {navigationItems.map(
-              (item) => (
+              (
+                item
+              ) => (
                 <button
-                  key={item.path}
+                  key={
+                    item.path
+                  }
                   type="button"
                   className={
                     isActive(
@@ -124,7 +219,9 @@ function TeacherLayout({
                     )
                   }
                 >
-                  {item.label}
+                  {
+                    item.label
+                  }
                 </button>
               )
             )}
@@ -144,7 +241,9 @@ function TeacherLayout({
         </aside>
 
         <main className="teacher-layout-content">
+
           {children}
+
         </main>
 
       </div>

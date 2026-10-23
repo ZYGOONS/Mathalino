@@ -9,7 +9,6 @@ import {
 
 import {
   onAuthStateChanged,
-  signOut,
   type User,
 } from "firebase/auth";
 
@@ -26,7 +25,7 @@ import {
   db,
 } from "../firebase/firebase";
 
-import mathalinoLogo from "../assets/mathalino-logo.png";
+import TeacherLayout from "../components/TeacherLayout";
 
 import "./TeacherAccountPage.css";
 
@@ -75,9 +74,13 @@ function formatTimestamp(
 }
 
 function TeacherAccountPage() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [profile, setProfile] =
+  const [
+    profile,
+    setProfile,
+  ] =
     useState<TeacherProfile>({
       uid: "",
       email: "",
@@ -93,124 +96,164 @@ function TeacherAccountPage() {
       createdAt: null,
     });
 
-  const [loading, setLoading] =
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(true);
 
-  const [saving, setSaving] =
+  const [
+    saving,
+    setSaving,
+  ] =
     useState(false);
 
-  const [editing, setEditing] =
+  const [
+    editing,
+    setEditing,
+  ] =
     useState(false);
 
-  const [error, setError] =
+  const [
+    error,
+    setError,
+  ] =
     useState("");
 
-  const [success, setSuccess] =
+  const [
+    success,
+    setSuccess,
+  ] =
     useState("");
+
+  /*
+   * =========================
+   * LOAD TEACHER PROFILE
+   * =========================
+   */
 
   useEffect(() => {
     let active = true;
 
-    const loadProfile = async (
-      user: User
-    ) => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const userReference = doc(
-          db,
-          "users",
-          user.uid
-        );
-
-        const userSnapshot =
-          await getDoc(
-            userReference
+    const loadProfile =
+      async (
+        user: User
+      ) => {
+        try {
+          setLoading(
+            true
           );
 
-        if (!userSnapshot.exists()) {
-          throw new Error(
-            "Teacher profile was not found."
-          );
-        }
-
-        const data =
-          userSnapshot.data();
-
-        if (
-          data.role !== "teacher"
-        ) {
-          throw new Error(
-            "This account is not a teacher account."
-          );
-        }
-
-        if (!active) {
-          return;
-        }
-
-        setProfile({
-          uid:
-            user.uid,
-
-          email:
-            data.email ??
-            user.email ??
-            "",
-
-          role:
-            data.role ??
-            "teacher",
-
-          firstName:
-            data.firstName ??
-            "",
-
-          middleInitial:
-            data.middleInitial ??
-            "",
-
-          lastName:
-            data.lastName ??
-            "",
-
-          title:
-            data.title ??
-            "",
-
-          school:
-            data.school ??
-            "",
-
-          createdAt:
-            data.createdAt ??
-            null,
-        });
-      } catch (profileError) {
-        console.error(
-          "Unable to load teacher profile:",
-          profileError
-        );
-
-        if (active) {
           setError(
-            "Unable to load your account information."
+            ""
           );
+
+          const userReference =
+            doc(
+              db,
+              "users",
+              user.uid
+            );
+
+          const userSnapshot =
+            await getDoc(
+              userReference
+            );
+
+          if (
+            !userSnapshot.exists()
+          ) {
+            throw new Error(
+              "Teacher profile was not found."
+            );
+          }
+
+          const data =
+            userSnapshot.data();
+
+          if (
+            data.role !==
+            "teacher"
+          ) {
+            throw new Error(
+              "This account is not a teacher account."
+            );
+          }
+
+          if (!active) {
+            return;
+          }
+
+          setProfile({
+            uid:
+              user.uid,
+
+            email:
+              data.email ??
+              user.email ??
+              "",
+
+            role:
+              data.role ??
+              "teacher",
+
+            firstName:
+              data.firstName ??
+              "",
+
+            middleInitial:
+              data.middleInitial ??
+              "",
+
+            lastName:
+              data.lastName ??
+              "",
+
+            title:
+              data.title ??
+              "",
+
+            school:
+              data.school ??
+              "",
+
+            createdAt:
+              data.createdAt ??
+              null,
+          });
+        } catch (
+          profileError
+        ) {
+          console.error(
+            "Unable to load teacher profile:",
+            profileError
+          );
+
+          if (active) {
+            setError(
+              "Unable to load your account information."
+            );
+          }
+        } finally {
+          if (active) {
+            setLoading(
+              false
+            );
+          }
         }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    };
+      };
 
     const unsubscribe =
       onAuthStateChanged(
         auth,
-        (user) => {
+        (
+          user
+        ) => {
           if (!user) {
-            navigate("/");
+            navigate(
+              "/"
+            );
+
             return;
           }
 
@@ -222,9 +265,16 @@ function TeacherAccountPage() {
 
     return () => {
       active = false;
+
       unsubscribe();
     };
   }, [navigate]);
+
+  /*
+   * =========================
+   * EDIT PROFILE
+   * =========================
+   */
 
   const handleInputChange = (
     field:
@@ -236,286 +286,237 @@ function TeacherAccountPage() {
     value: string
   ) => {
     setProfile(
-      (currentProfile) => ({
+      (
+        currentProfile
+      ) => ({
         ...currentProfile,
-        [field]: value,
+
+        [field]:
+          value,
       })
     );
 
-    setSuccess("");
+    setError(
+      ""
+    );
+
+    setSuccess(
+      ""
+    );
   };
 
-  const handleSave = async () => {
-    const user =
-      auth.currentUser;
+  /*
+   * =========================
+   * SAVE PROFILE
+   * =========================
+   */
 
-    if (!user) {
-      navigate("/");
-      return;
-    }
+  const handleSave =
+    async () => {
+      const user =
+        auth.currentUser;
 
-    if (
-      !profile.firstName.trim() ||
-      !profile.lastName.trim()
-    ) {
-      setError(
-        "First name and last name are required."
-      );
+      if (!user) {
+        navigate(
+          "/"
+        );
 
-      return;
-    }
+        return;
+      }
 
-    try {
-      setSaving(true);
-      setError("");
-      setSuccess("");
+      if (
+        !profile.firstName.trim() ||
+        !profile.lastName.trim()
+      ) {
+        setError(
+          "First name and last name are required."
+        );
 
-      const userReference = doc(
-        db,
-        "users",
-        user.uid
-      );
+        return;
+      }
 
-      const fullName = [
-        profile.firstName.trim(),
+      try {
+        setSaving(
+          true
+        );
 
-        profile.middleInitial.trim(),
+        setError(
+          ""
+        );
 
-        profile.lastName.trim(),
-      ]
-        .filter(Boolean)
-        .join(" ");
+        setSuccess(
+          ""
+        );
 
-      await updateDoc(
-        userReference,
-        {
-          firstName:
+        const userReference =
+          doc(
+            db,
+            "users",
+            user.uid
+          );
+
+        const fullName =
+          [
             profile.firstName.trim(),
 
-          middleInitial:
             profile.middleInitial.trim(),
 
-          lastName:
             profile.lastName.trim(),
+          ]
+            .filter(
+              Boolean
+            )
+            .join(
+              " "
+            );
 
-          fullName,
+        await updateDoc(
+          userReference,
+          {
+            firstName:
+              profile.firstName.trim(),
 
-          displayName:
+            middleInitial:
+              profile.middleInitial.trim(),
+
+            lastName:
+              profile.lastName.trim(),
+
             fullName,
 
-          title:
-            profile.title.trim(),
+            displayName:
+              fullName,
 
-          school:
-            profile.school.trim(),
+            title:
+              profile.title.trim(),
 
-          updatedAt:
-            serverTimestamp(),
-        }
-      );
+            school:
+              profile.school.trim(),
 
-      setEditing(false);
+            updatedAt:
+              serverTimestamp(),
+          }
+        );
 
-      setSuccess(
-        "Account information updated successfully."
-      );
-    } catch (saveError) {
-      console.error(
-        "Unable to update teacher profile:",
+        setEditing(
+          false
+        );
+
+        setSuccess(
+          "Account information updated successfully."
+        );
+      } catch (
         saveError
-      );
-
-      setError(
-        "Unable to update your account information."
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleLogout =
-    async () => {
-      try {
-        await signOut(auth);
-
-        navigate("/");
-      } catch (logoutError) {
+      ) {
         console.error(
-          "Teacher logout error:",
-          logoutError
+          "Unable to update teacher profile:",
+          saveError
+        );
+
+        setError(
+          "Unable to update your account information."
+        );
+      } finally {
+        setSaving(
+          false
         );
       }
     };
 
-  const fullName = [
-    profile.firstName,
-    profile.middleInitial,
-    profile.lastName,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const fullName =
+    [
+      profile.firstName,
+      profile.middleInitial,
+      profile.lastName,
+    ]
+      .filter(
+        Boolean
+      )
+      .join(
+        " "
+      );
 
   return (
-    <div className="teacher-account-page">
+    <TeacherLayout>
 
-      <div className="teacher-account-layout">
+      <div className="teacher-account-main">
 
-        {/* SIDEBAR */}
+        {/* =========================
+            PAGE HEADING
+            ========================= */}
 
-        <aside className="teacher-account-sidebar">
+        <div className="teacher-account-heading">
 
-          <div className="teacher-account-brand">
+          <div>
 
-            <img
-              src={mathalinoLogo}
-              alt="Mathalino Logo"
-              className="teacher-account-logo"
-            />
+            <span className="teacher-account-eyebrow">
+              TEACHER ACCOUNT
+            </span>
 
-            <div>
-              <h1>
-                Mathalino
-              </h1>
-
-              <p>
-                LEARN BY DOING
-              </p>
-            </div>
-
-          </div>
-
-          <nav className="teacher-account-nav">
-
-            <button
-              type="button"
-              className="teacher-account-nav-item"
-              onClick={() =>
-                navigate(
-                  "/teacher-dashboard"
-                )
-              }
-            >
-              Dashboard
-            </button>
-
-            <button
-              type="button"
-              className="teacher-account-nav-item"
-              onClick={() =>
-                navigate(
-                  "/teacher/learners"
-                )
-              }
-            >
-              My Learners
-            </button>
-
-            <button
-              type="button"
-              className="teacher-account-nav-item"
-              onClick={() =>
-                navigate(
-                  "/teacher/activities"
-                )
-              }
-            >
-              Activities
-            </button>
-
-            <button
-              type="button"
-              className="teacher-account-nav-item"
-              onClick={() =>
-                navigate(
-                  "/teacher/guardian-requests"
-                )
-              }
-            >
-              Guardian Requests
-            </button>
-
-            <button
-              type="button"
-              className="teacher-account-nav-item active"
-              onClick={() =>
-                navigate(
-                  "/teacher/account"
-                )
-              }
-            >
+            <h2>
               Account
-            </button>
+            </h2>
 
-          </nav>
-
-          <button
-            type="button"
-            className="teacher-account-logout"
-            onClick={() => {
-              void handleLogout();
-            }}
-          >
-            Log out
-          </button>
-
-        </aside>
-
-        {/* MAIN */}
-
-        <main className="teacher-account-main">
-
-          <div className="teacher-account-heading">
-
-            <div>
-              <span className="teacher-account-eyebrow">
-                TEACHER ACCOUNT
-              </span>
-
-              <h2>
-                Account
-              </h2>
-
-              <p>
-                View and update your
-                Mathalino teacher information.
-              </p>
-            </div>
-
-            {!loading && (
-              <button
-                type="button"
-                className={
-                  editing
-                    ? "teacher-account-edit cancel"
-                    : "teacher-account-edit"
-                }
-                onClick={() => {
-                  setEditing(
-                    (current) =>
-                      !current
-                  );
-
-                  setError("");
-                  setSuccess("");
-                }}
-              >
-                {editing
-                  ? "Cancel"
-                  : "Edit Profile"}
-              </button>
-            )}
+            <p>
+              View and update your
+              Mathalino teacher information.
+            </p>
 
           </div>
 
-          {loading && (
-            <div className="teacher-account-card">
-              <div className="teacher-account-message">
-                Loading account...
-              </div>
-            </div>
+          {!loading && (
+            <button
+              type="button"
+              className={
+                editing
+                  ? "teacher-account-edit cancel"
+                  : "teacher-account-edit"
+              }
+              onClick={() => {
+                setEditing(
+                  (
+                    current
+                  ) =>
+                    !current
+                );
+
+                setError(
+                  ""
+                );
+
+                setSuccess(
+                  ""
+                );
+              }}
+            >
+              {editing
+                ? "Cancel"
+                : "Edit Profile"}
+            </button>
           )}
 
-          {!loading && error && (
+        </div>
+
+        {/* =========================
+            LOADING
+            ========================= */}
+
+        {loading && (
+          <div className="teacher-account-card">
+
+            <div className="teacher-account-message">
+              Loading account...
+            </div>
+
+          </div>
+        )}
+
+        {/* =========================
+            ERROR
+            ========================= */}
+
+        {!loading &&
+          error && (
             <div
               className="teacher-account-alert error"
               role="alert"
@@ -524,7 +525,12 @@ function TeacherAccountPage() {
             </div>
           )}
 
-          {!loading && success && (
+        {/* =========================
+            SUCCESS
+            ========================= */}
+
+        {!loading &&
+          success && (
             <div
               className="teacher-account-alert success"
               role="status"
@@ -533,267 +539,324 @@ function TeacherAccountPage() {
             </div>
           )}
 
-          {!loading && (
-            <section className="teacher-account-card">
+        {/* =========================
+            ACCOUNT CARD
+            ========================= */}
 
-              <div className="teacher-account-profile">
+        {!loading && (
+          <section className="teacher-account-card">
 
-                <div className="teacher-account-avatar">
-                  {profile.firstName
-                    .charAt(0)
-                    .toUpperCase() ||
-                    "T"}
-                </div>
+            {/* PROFILE HEADER */}
 
-                <div>
-                  <h3>
-                    {fullName ||
-                      "Teacher"}
-                  </h3>
+            <div className="teacher-account-profile">
 
-                  <p>
-                    {profile.title ||
-                      "Teacher"}
-                  </p>
-                </div>
+              <div className="teacher-account-avatar">
+
+                {profile.firstName
+                  .charAt(
+                    0
+                  )
+                  .toUpperCase() ||
+                  "T"}
 
               </div>
 
-              <div className="teacher-account-section-title">
+              <div>
+
+                <h3>
+                  {fullName ||
+                    "Teacher"}
+                </h3>
+
+                <p>
+                  {profile.title ||
+                    "Teacher"}
+                </p>
+
+              </div>
+
+            </div>
+
+            {/* =========================
+                PERSONAL INFORMATION
+                ========================= */}
+
+            <div className="teacher-account-section-title">
+
+              <span>
+                PERSONAL INFORMATION
+              </span>
+
+              <h4>
+                Teacher Profile
+              </h4>
+
+            </div>
+
+            <div className="teacher-account-grid">
+
+              {/* FIRST NAME */}
+
+              <div className="teacher-account-field">
+
+                <label htmlFor="teacher-first-name">
+                  FIRST NAME
+                </label>
+
+                <input
+                  id="teacher-first-name"
+                  type="text"
+                  value={
+                    profile.firstName
+                  }
+                  disabled={
+                    !editing
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    handleInputChange(
+                      "firstName",
+                      event.target.value
+                    )
+                  }
+                />
+
+              </div>
+
+              {/* MIDDLE INITIAL */}
+
+              <div className="teacher-account-field">
+
+                <label htmlFor="teacher-middle-initial">
+                  MIDDLE INITIAL
+                </label>
+
+                <input
+                  id="teacher-middle-initial"
+                  type="text"
+                  maxLength={
+                    3
+                  }
+                  value={
+                    profile.middleInitial
+                  }
+                  disabled={
+                    !editing
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    handleInputChange(
+                      "middleInitial",
+                      event.target.value
+                    )
+                  }
+                />
+
+              </div>
+
+              {/* LAST NAME */}
+
+              <div className="teacher-account-field">
+
+                <label htmlFor="teacher-last-name">
+                  LAST NAME
+                </label>
+
+                <input
+                  id="teacher-last-name"
+                  type="text"
+                  value={
+                    profile.lastName
+                  }
+                  disabled={
+                    !editing
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    handleInputChange(
+                      "lastName",
+                      event.target.value
+                    )
+                  }
+                />
+
+              </div>
+
+              {/* TITLE */}
+
+              <div className="teacher-account-field">
+
+                <label htmlFor="teacher-title">
+                  TITLE
+                </label>
+
+                <input
+                  id="teacher-title"
+                  type="text"
+                  value={
+                    profile.title
+                  }
+                  disabled={
+                    !editing
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    handleInputChange(
+                      "title",
+                      event.target.value
+                    )
+                  }
+                />
+
+              </div>
+
+              {/* SCHOOL */}
+
+              <div className="teacher-account-field full">
+
+                <label htmlFor="teacher-school">
+                  SCHOOL
+                </label>
+
+                <input
+                  id="teacher-school"
+                  type="text"
+                  value={
+                    profile.school
+                  }
+                  disabled={
+                    !editing
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    handleInputChange(
+                      "school",
+                      event.target.value
+                    )
+                  }
+                />
+
+              </div>
+
+            </div>
+
+            {/* =========================
+                ACCOUNT INFORMATION
+                ========================= */}
+
+            <div className="teacher-account-section-title account-section-space">
+
+              <span>
+                ACCOUNT INFORMATION
+              </span>
+
+              <h4>
+                Login & Access
+              </h4>
+
+            </div>
+
+            <div className="teacher-account-grid">
+
+              {/* EMAIL */}
+
+              <div className="teacher-account-info-box">
+
                 <span>
-                  PERSONAL INFORMATION
+                  EMAIL
                 </span>
 
-                <h4>
-                  Teacher Profile
-                </h4>
-              </div>
-
-              <div className="teacher-account-grid">
-
-                <div className="teacher-account-field">
-
-                  <label htmlFor="teacher-first-name">
-                    FIRST NAME
-                  </label>
-
-                  <input
-                    id="teacher-first-name"
-                    type="text"
-                    value={
-                      profile.firstName
-                    }
-                    disabled={
-                      !editing
-                    }
-                    onChange={(event) =>
-                      handleInputChange(
-                        "firstName",
-                        event.target.value
-                      )
-                    }
-                  />
-
-                </div>
-
-                <div className="teacher-account-field">
-
-                  <label htmlFor="teacher-middle-initial">
-                    MIDDLE INITIAL
-                  </label>
-
-                  <input
-                    id="teacher-middle-initial"
-                    type="text"
-                    maxLength={3}
-                    value={
-                      profile.middleInitial
-                    }
-                    disabled={
-                      !editing
-                    }
-                    onChange={(event) =>
-                      handleInputChange(
-                        "middleInitial",
-                        event.target.value
-                      )
-                    }
-                  />
-
-                </div>
-
-                <div className="teacher-account-field">
-
-                  <label htmlFor="teacher-last-name">
-                    LAST NAME
-                  </label>
-
-                  <input
-                    id="teacher-last-name"
-                    type="text"
-                    value={
-                      profile.lastName
-                    }
-                    disabled={
-                      !editing
-                    }
-                    onChange={(event) =>
-                      handleInputChange(
-                        "lastName",
-                        event.target.value
-                      )
-                    }
-                  />
-
-                </div>
-
-                <div className="teacher-account-field">
-
-                  <label htmlFor="teacher-title">
-                    TITLE
-                  </label>
-
-                  <input
-                    id="teacher-title"
-                    type="text"
-                    value={
-                      profile.title
-                    }
-                    disabled={
-                      !editing
-                    }
-                    onChange={(event) =>
-                      handleInputChange(
-                        "title",
-                        event.target.value
-                      )
-                    }
-                  />
-
-                </div>
-
-                <div className="teacher-account-field full">
-
-                  <label htmlFor="teacher-school">
-                    SCHOOL
-                  </label>
-
-                  <input
-                    id="teacher-school"
-                    type="text"
-                    value={
-                      profile.school
-                    }
-                    disabled={
-                      !editing
-                    }
-                    onChange={(event) =>
-                      handleInputChange(
-                        "school",
-                        event.target.value
-                      )
-                    }
-                  />
-
-                </div>
+                <strong>
+                  {profile.email ||
+                    "—"}
+                </strong>
 
               </div>
 
-              <div className="teacher-account-section-title account-section-space">
+              {/* ROLE */}
+
+              <div className="teacher-account-info-box">
 
                 <span>
-                  ACCOUNT INFORMATION
+                  ROLE
                 </span>
 
-                <h4>
-                  Login & Access
-                </h4>
+                <strong>
+                  Teacher
+                </strong>
 
               </div>
 
-              <div className="teacher-account-grid">
+              {/* DATE CREATED */}
 
-                <div className="teacher-account-info-box">
+              <div className="teacher-account-info-box">
 
-                  <span>
-                    EMAIL
-                  </span>
+                <span>
+                  DATE CREATED
+                </span>
 
-                  <strong>
-                    {profile.email ||
-                      "—"}
-                  </strong>
-
-                </div>
-
-                <div className="teacher-account-info-box">
-
-                  <span>
-                    ROLE
-                  </span>
-
-                  <strong>
-                    Teacher
-                  </strong>
-
-                </div>
-
-                <div className="teacher-account-info-box">
-
-                  <span>
-                    DATE CREATED
-                  </span>
-
-                  <strong>
-                    {formatTimestamp(
-                      profile.createdAt
-                    )}
-                  </strong>
-
-                </div>
-
-                <div className="teacher-account-info-box">
-
-                  <span>
-                    USER ID
-                  </span>
-
-                  <strong className="teacher-account-uid">
-                    {profile.uid}
-                  </strong>
-
-                </div>
+                <strong>
+                  {formatTimestamp(
+                    profile.createdAt
+                  )}
+                </strong>
 
               </div>
 
-              {editing && (
-                <div className="teacher-account-save-area">
+              {/* USER ID */}
 
-                  <button
-                    type="button"
-                    className="teacher-account-save"
-                    disabled={
-                      saving
-                    }
-                    onClick={() => {
-                      void handleSave();
-                    }}
-                  >
-                    {saving
-                      ? "Saving..."
-                      : "Save Changes"}
-                  </button>
+              <div className="teacher-account-info-box">
 
-                </div>
-              )}
+                <span>
+                  USER ID
+                </span>
 
-            </section>
-          )}
+                <strong className="teacher-account-uid">
+                  {
+                    profile.uid
+                  }
+                </strong>
 
-        </main>
+              </div>
+
+            </div>
+
+            {/* =========================
+                SAVE
+                ========================= */}
+
+            {editing && (
+              <div className="teacher-account-save-area">
+
+                <button
+                  type="button"
+                  className="teacher-account-save"
+                  disabled={
+                    saving
+                  }
+                  onClick={() => {
+                    void handleSave();
+                  }}
+                >
+                  {saving
+                    ? "Saving..."
+                    : "Save Changes"}
+                </button>
+
+              </div>
+            )}
+
+          </section>
+        )}
 
       </div>
-    </div>
+
+    </TeacherLayout>
   );
 }
 

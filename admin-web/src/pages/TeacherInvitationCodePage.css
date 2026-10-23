@@ -1,0 +1,326 @@
+.teacher-invitation-heading {
+  margin-bottom: 25px;
+}
+
+.teacher-invitation-back {
+  display: block;
+
+  margin-bottom: 18px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #007d72;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-invitation-eyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #007d72;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.teacher-invitation-heading h2 {
+  margin: 0;
+
+  color: #102d3c;
+
+  font-size: 30px;
+  font-weight: 750;
+}
+
+.teacher-invitation-heading p {
+  margin: 8px 0 0;
+
+  color: #71838b;
+
+  font-size: 14px;
+}
+
+/* =========================
+   LAYOUT
+   ========================= */
+
+.teacher-invitation-layout {
+  display: grid;
+
+  grid-template-columns:
+    minmax(
+      0,
+      0.8fr
+    )
+    minmax(
+      0,
+      1.2fr
+    );
+
+  gap: 16px;
+}
+
+.teacher-invitation-card {
+  padding: 22px;
+
+  border: 1px solid #d7e2df;
+  border-radius: 18px;
+
+  background: #ffffff;
+}
+
+.teacher-invitation-code-card {
+  text-align: center;
+}
+
+.teacher-invitation-requests {
+  grid-column:
+    1 / -1;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+/* =========================
+   CONTENT
+   ========================= */
+
+.teacher-invitation-section-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #007d72;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.2px;
+}
+
+.teacher-invitation-card h3 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 18px;
+}
+
+.teacher-invitation-card p {
+  margin: 6px 0 0;
+
+  color: #71838b;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+/* =========================
+   CODE
+   ========================= */
+
+.teacher-invitation-code {
+  margin-top: 18px;
+
+  padding: 20px 15px;
+
+  border: 1px solid #b9d7d0;
+  border-radius: 14px;
+
+  background: #eff8f5;
+
+  color: #006f66;
+
+  font-size: 31px;
+  font-weight: 800;
+
+  letter-spacing: 5px;
+}
+
+.teacher-invitation-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 9px;
+
+  margin-top: 13px;
+
+  color: #71838b;
+
+  font-size: 10px;
+}
+
+.teacher-invitation-active {
+  padding: 5px 10px;
+
+  border-radius: 13px;
+
+  background: #e4f5ec;
+
+  color: #0f6f49;
+
+  font-weight: 700;
+}
+
+.teacher-invitation-help {
+  max-width: 510px;
+
+  margin:
+    17px auto 0 !important;
+}
+
+.teacher-invitation-generating {
+  padding: 40px 10px;
+
+  color: #71838b;
+
+  font-size: 12px;
+}
+
+/* =========================
+   ACTIONS
+   ========================= */
+
+.teacher-invitation-actions {
+  display: flex;
+  justify-content: center;
+
+  gap: 9px;
+
+  margin-top: 19px;
+}
+
+.teacher-invitation-copy,
+.teacher-invitation-share,
+.teacher-invitation-requests button {
+  min-height: 39px;
+
+  padding: 0 17px;
+
+  border-radius: 20px;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-invitation-copy {
+  border: 1px solid #9bc8be;
+
+  background: #ffffff;
+
+  color: #007d72;
+}
+
+.teacher-invitation-share {
+  border: 1px solid #007d72;
+
+  background: #007d72;
+
+  color: #ffffff;
+}
+
+.teacher-invitation-requests button {
+  flex: 0 0 auto;
+
+  border: 1px solid #007d72;
+
+  background: #ffffff;
+
+  color: #007d72;
+}
+
+/* =========================
+   MESSAGES
+   ========================= */
+
+.teacher-invitation-error,
+.teacher-invitation-success {
+  margin-bottom: 18px;
+
+  padding: 11px 14px;
+
+  border-radius: 10px;
+
+  font-size: 12px;
+}
+
+.teacher-invitation-error {
+  border: 1px solid #efc4c0;
+
+  background: #fff4f3;
+
+  color: #922f29;
+}
+
+.teacher-invitation-success {
+  border: 1px solid #b7ddcf;
+
+  background: #eff8f5;
+
+  color: #0f6f49;
+}
+
+.teacher-invitation-loading {
+  padding: 55px;
+
+  color: #71838b;
+
+  text-align: center;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 760px) {
+  .teacher-invitation-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-invitation-requests {
+    grid-column: auto;
+
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .teacher-invitation-code {
+    font-size: 24px;
+
+    letter-spacing: 3px;
+  }
+}
+
+@media (max-width: 500px) {
+  .teacher-invitation-actions {
+    flex-direction: column;
+  }
+
+  .teacher-invitation-copy,
+  .teacher-invitation-share {
+    width: 100%;
+  }
+}

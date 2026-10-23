@@ -1,0 +1,285 @@
+.teacher-edit-learner-heading {
+  margin-bottom: 25px;
+}
+
+.teacher-edit-learner-back {
+  display: block;
+
+  margin-bottom: 18px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #007d72;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-edit-learner-eyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #007d72;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.teacher-edit-learner-heading h2 {
+  margin: 0;
+
+  color: #102d3c;
+
+  font-size: 30px;
+  font-weight: 750;
+}
+
+.teacher-edit-learner-heading p {
+  margin: 8px 0 0;
+
+  color: #71838b;
+
+  font-size: 14px;
+}
+
+/* =========================
+   CARD
+   ========================= */
+
+.teacher-edit-learner-card {
+  width: 100%;
+
+  max-width: 900px;
+
+  padding: 26px;
+
+  border: 1px solid #d7e2df;
+  border-radius: 18px;
+
+  background: #ffffff;
+}
+
+.teacher-edit-learner-section-title {
+  margin-bottom: 21px;
+}
+
+.teacher-edit-learner-section-title span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #007d72;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.3px;
+}
+
+.teacher-edit-learner-section-title h3 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 18px;
+}
+
+/* =========================
+   FORM
+   ========================= */
+
+.teacher-edit-learner-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 17px;
+}
+
+.teacher-edit-learner-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.teacher-edit-learner-field.full {
+  grid-column:
+    1 / -1;
+}
+
+.teacher-edit-learner-field label {
+  color: #70848a;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.1px;
+}
+
+.teacher-edit-learner-field input {
+  width: 100%;
+  height: 44px;
+
+  box-sizing: border-box;
+
+  padding: 0 13px;
+
+  border: 1px solid #cbd9d6;
+  border-radius: 11px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #153844;
+
+  font: inherit;
+  font-size: 13px;
+}
+
+.teacher-edit-learner-field input:focus {
+  border-color: #007d72;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      0,
+      125,
+      114,
+      0.1
+    );
+}
+
+.teacher-edit-learner-field input:disabled {
+  background: #f6f8f8;
+}
+
+.teacher-edit-learner-field small {
+  color: #a23a33;
+
+  font-size: 10px;
+}
+
+/* =========================
+   ACTIONS
+   ========================= */
+
+.teacher-edit-learner-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 25px;
+
+  padding-top: 21px;
+
+  border-top: 1px solid #e4ecea;
+}
+
+.teacher-edit-learner-cancel,
+.teacher-edit-learner-save {
+  min-height: 39px;
+
+  padding: 0 18px;
+
+  border-radius: 20px;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-edit-learner-cancel {
+  border: 1px solid #cbd9d6;
+
+  background: #ffffff;
+
+  color: #53666b;
+}
+
+.teacher-edit-learner-save {
+  border: 1px solid #007d72;
+
+  background: #007d72;
+
+  color: #ffffff;
+}
+
+.teacher-edit-learner-save:hover:not(:disabled) {
+  background: #006d64;
+}
+
+.teacher-edit-learner-cancel:disabled,
+.teacher-edit-learner-save:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+/* =========================
+   ERROR / LOADING
+   ========================= */
+
+.teacher-edit-learner-error {
+  margin-bottom: 18px;
+
+  padding: 11px 14px;
+
+  border: 1px solid #efc4c0;
+  border-radius: 10px;
+
+  background: #fff4f3;
+
+  color: #922f29;
+
+  font-size: 12px;
+}
+
+.teacher-edit-learner-loading {
+  padding: 55px;
+
+  color: #71838b;
+
+  text-align: center;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 650px) {
+  .teacher-edit-learner-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-edit-learner-field.full {
+    grid-column: auto;
+  }
+
+  .teacher-edit-learner-actions {
+    flex-direction: column;
+  }
+
+  .teacher-edit-learner-cancel,
+  .teacher-edit-learner-save {
+    width: 100%;
+  }
+}

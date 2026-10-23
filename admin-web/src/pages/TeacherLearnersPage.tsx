@@ -10,16 +10,13 @@ import {
 
 import {
   onAuthStateChanged,
-  type User,
 } from "firebase/auth";
 
 import {
   collection,
-  getDocs,
+  onSnapshot,
   query,
   where,
-  type DocumentData,
-  type Timestamp,
 } from "firebase/firestore";
 
 import {
@@ -31,226 +28,283 @@ import TeacherLayout from "../components/TeacherLayout";
 
 import "./TeacherLearnersPage.css";
 
-interface LearnerRow {
+interface Learner {
   id: string;
-  name: string;
+
+  teacherId: string;
+
+  firstName: string;
+  lastName: string;
+  fullName: string;
+
   status: string;
-  registered: string;
+
+  createdAt: unknown;
 }
 
-function getDisplayName(
-  data: DocumentData
-): string {
-  if (
-    typeof data.fullName === "string" &&
-    data.fullName.trim()
-  ) {
-    return data.fullName;
-  }
-
-  if (
-    typeof data.displayName === "string" &&
-    data.displayName.trim()
-  ) {
-    return data.displayName;
-  }
-
-  const name = [
-    data.firstName,
-    data.middleInitial,
-    data.lastName,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return name || "Unnamed Learner";
-}
-
-function formatTimestamp(
+function formatDate(
   value: unknown
 ): string {
-  if (!value) {
+  if (
+    !value ||
+    typeof value !== "object"
+  ) {
     return "—";
   }
 
-  const timestamp =
-    value as Timestamp;
-
   if (
-    typeof timestamp?.toDate ===
-    "function"
+    "toDate" in value &&
+    typeof value.toDate ===
+      "function"
   ) {
-    return timestamp
-      .toDate()
-      .toLocaleDateString(
-        "en-US",
-        {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }
-      );
+    const date =
+      value.toDate();
+
+    return date.toLocaleDateString(
+      "en-US",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }
+    );
   }
 
   return "—";
 }
 
-function formatStatus(
-  status: string
+function getLearnerName(
+  learner: Learner
 ): string {
-  if (!status) {
-    return "—";
+  if (
+    learner.fullName.trim()
+  ) {
+    return learner.fullName.trim();
   }
 
-  return (
-    status.charAt(0).toUpperCase() +
-    status.slice(1).toLowerCase()
-  );
+  const name = [
+    learner.firstName,
+    learner.lastName,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return name || "Unnamed Learner";
 }
 
 function TeacherLearnersPage() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [learners, setLearners] =
-    useState<LearnerRow[]>([]);
+  const [
+    learners,
+    setLearners,
+  ] =
+    useState<Learner[]>([]);
 
-  const [search, setSearch] =
+  const [
+    search,
+    setSearch,
+  ] =
     useState("");
 
-  const [loading, setLoading] =
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(true);
 
-  const [error, setError] =
+  const [
+    error,
+    setError,
+  ] =
     useState("");
 
+  /*
+   * =========================
+   * LOAD TEACHER LEARNERS
+   * =========================
+   */
+
   useEffect(() => {
-    let active = true;
+    let unsubscribeLearners:
+      | (() => void)
+      | undefined;
 
-    const loadLearners = async (
-      user: User
-    ) => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const learnersQuery =
-          query(
-            collection(
-              db,
-              "learners"
-            ),
-            where(
-              "teacherId",
-              "==",
-              user.uid
-            )
-          );
-
-        const snapshot =
-          await getDocs(
-            learnersQuery
-          );
-
-        if (!active) {
-          return;
-        }
-
-        const learnerList:
-          LearnerRow[] =
-          snapshot.docs.map(
-            (document) => {
-              const data =
-                document.data();
-
-              return {
-                id:
-                  document.id,
-
-                name:
-                  getDisplayName(
-                    data
-                  ),
-
-                status:
-                  data.status ??
-                  data.accountStatus ??
-                  "",
-
-                registered:
-                  formatTimestamp(
-                    data.createdAt
-                  ),
-              };
-            }
-          );
-
-        setLearners(
-          learnerList
-        );
-      } catch (loadError) {
-        console.error(
-          "Unable to load learners:",
-          loadError
-        );
-
-        if (active) {
-          setError(
-            "Unable to load your learners."
-          );
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    };
-
-    const unsubscribe =
+    const unsubscribeAuth =
       onAuthStateChanged(
         auth,
-        (user) => {
+        (
+          user
+        ) => {
           if (!user) {
             navigate("/");
             return;
           }
 
-          void loadLearners(
-            user
-          );
+          setLoading(true);
+          setError("");
+
+          const learnersQuery =
+            query(
+              collection(
+                db,
+                "learners"
+              ),
+              where(
+                "teacherId",
+                "==",
+                user.uid
+              )
+            );
+
+          unsubscribeLearners =
+            onSnapshot(
+              learnersQuery,
+              (
+                snapshot
+              ) => {
+                const learnerList =
+                  snapshot.docs.map(
+                    (
+                      learnerDocument
+                    ): Learner => {
+                      const data =
+                        learnerDocument.data();
+
+                      return {
+                        id:
+                          learnerDocument.id,
+
+                        teacherId:
+                          data.teacherId ??
+                          "",
+
+                        firstName:
+                          data.firstName ??
+                          "",
+
+                        lastName:
+                          data.lastName ??
+                          "",
+
+                        fullName:
+                          data.fullName ??
+                          "",
+
+                        status:
+                          data.status ??
+                          "active",
+
+                        createdAt:
+                          data.createdAt ??
+                          null,
+                      };
+                    }
+                  );
+
+                learnerList.sort(
+                  (
+                    first,
+                    second
+                  ) =>
+                    getLearnerName(
+                      first
+                    ).localeCompare(
+                      getLearnerName(
+                        second
+                      )
+                    )
+                );
+
+                setLearners(
+                  learnerList
+                );
+
+                setLoading(
+                  false
+                );
+              },
+              (
+                snapshotError
+              ) => {
+                console.error(
+                  "Could not load learners:",
+                  snapshotError
+                );
+
+                setError(
+                  "Could not load your learners."
+                );
+
+                setLoading(
+                  false
+                );
+              }
+            );
         }
       );
 
     return () => {
-      active = false;
-      unsubscribe();
+      unsubscribeAuth();
+
+      if (
+        unsubscribeLearners
+      ) {
+        unsubscribeLearners();
+      }
     };
   }, [navigate]);
 
+  /*
+   * =========================
+   * SEARCH
+   * =========================
+   */
+
   const filteredLearners =
-    useMemo(() => {
-      const keyword =
-        search
-          .trim()
-          .toLowerCase();
+    useMemo(
+      () => {
+        const keyword =
+          search
+            .trim()
+            .toLowerCase();
 
-      if (!keyword) {
-        return learners;
-      }
+        if (!keyword) {
+          return learners;
+        }
 
-      return learners.filter(
-        (learner) =>
-          learner.name
-            .toLowerCase()
-            .includes(keyword)
-      );
-    }, [learners, search]);
+        return learners.filter(
+          (
+            learner
+          ) =>
+            getLearnerName(
+              learner
+            )
+              .toLowerCase()
+              .includes(
+                keyword
+              )
+        );
+      },
+      [
+        learners,
+        search,
+      ]
+    );
 
   return (
     <TeacherLayout>
 
+      {/* =========================
+          PAGE HEADING
+          ========================= */}
+
       <div className="teacher-learners-heading">
 
         <div>
+
           <span className="teacher-learners-eyebrow">
             LEARNER MANAGEMENT
           </span>
@@ -260,9 +314,10 @@ function TeacherLearnersPage() {
           </h2>
 
           <p>
-            View learners assigned to
-            your teacher account.
+            View learners assigned to your
+            teacher account.
           </p>
+
         </div>
 
         <div className="teacher-learners-total">
@@ -272,36 +327,58 @@ function TeacherLearnersPage() {
           </span>
 
           <strong>
-            {loading
-              ? "—"
-              : learners.length}
+            {
+              learners.length
+            }
           </strong>
 
         </div>
 
       </div>
 
+      {/* =========================
+          ERROR
+          ========================= */}
+
+      {error && (
+        <div
+          className="teacher-learners-error"
+          role="alert"
+        >
+          {error}
+        </div>
+      )}
+
+      {/* =========================
+          LEARNER TABLE
+          ========================= */}
+
       <section className="teacher-learners-card">
 
         <div className="teacher-learners-toolbar">
 
           <div>
+
             <h3>
               Learner Accounts
             </h3>
 
             <p>
-              Only learners assigned
-              to you are displayed.
+              Only learners assigned to
+              you are displayed.
             </p>
+
           </div>
 
           <input
             type="search"
-            value={search}
             placeholder="Search learner..."
-            aria-label="Search learners"
-            onChange={(event) =>
+            value={
+              search
+            }
+            onChange={(
+              event
+            ) =>
               setSearch(
                 event.target.value
               )
@@ -317,28 +394,16 @@ function TeacherLearnersPage() {
         )}
 
         {!loading &&
-          error && (
-            <div
-              className="teacher-learners-message teacher-learners-error"
-              role="alert"
-            >
-              {error}
-            </div>
-          )}
-
-        {!loading &&
-          !error &&
           filteredLearners.length ===
             0 && (
             <div className="teacher-learners-message">
               {search
                 ? "No learners match your search."
-                : "No learners are currently assigned to this teacher account."}
+                : "No learners found."}
             </div>
           )}
 
         {!loading &&
-          !error &&
           filteredLearners.length >
             0 && (
             <div className="teacher-learners-table-wrapper">
@@ -346,7 +411,9 @@ function TeacherLearnersPage() {
               <table className="teacher-learners-table">
 
                 <thead>
+
                   <tr>
+
                     <th>
                       Learner
                     </th>
@@ -358,13 +425,21 @@ function TeacherLearnersPage() {
                     <th>
                       Registered
                     </th>
+
+                    <th>
+                      Action
+                    </th>
+
                   </tr>
+
                 </thead>
 
                 <tbody>
 
                   {filteredLearners.map(
-                    (learner) => (
+                    (
+                      learner
+                    ) => (
                       <tr
                         key={
                           learner.id
@@ -372,35 +447,53 @@ function TeacherLearnersPage() {
                       >
 
                         <td className="teacher-learner-name">
-                          {
-                            learner.name
-                          }
-                        </td>
 
-                        <td>
-                          {learner.status ? (
-                            <span
-                              className={
-                                learner.status
-                                  .toLowerCase() ===
-                                "active"
-                                  ? "teacher-learner-status active"
-                                  : "teacher-learner-status"
-                              }
-                            >
-                              {formatStatus(
-                                learner.status
-                              )}
-                            </span>
-                          ) : (
-                            "—"
+                          {getLearnerName(
+                            learner
                           )}
+
                         </td>
 
                         <td>
-                          {
-                            learner.registered
-                          }
+
+                          <span
+                            className={
+                              learner.status ===
+                              "active"
+                                ? "teacher-learner-list-status active"
+                                : "teacher-learner-list-status inactive"
+                            }
+                          >
+                            {learner.status ===
+                            "active"
+                              ? "Active"
+                              : "Inactive"}
+                          </span>
+
+                        </td>
+
+                        <td>
+
+                          {formatDate(
+                            learner.createdAt
+                          )}
+
+                        </td>
+
+                        <td>
+
+                          <button
+                            type="button"
+                            className="teacher-learner-view-button"
+                            onClick={() =>
+                              navigate(
+                                `/teacher/learners/${learner.id}`
+                              )
+                            }
+                          >
+                            View Details
+                          </button>
+
                         </td>
 
                       </tr>

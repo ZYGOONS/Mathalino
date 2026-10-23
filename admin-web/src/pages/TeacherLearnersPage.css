@@ -40,16 +40,16 @@
   font-size: 14px;
 }
 
-/* TOTAL */
+/* =========================
+   TOTAL LEARNERS
+   ========================= */
 
 .teacher-learners-total {
   min-width: 150px;
 
   padding: 16px 20px;
 
-  border:
-    1px solid #d6e3e0;
-
+  border: 1px solid #d6e3e0;
   border-radius: 15px;
 
   background: #ffffff;
@@ -76,22 +76,24 @@
   font-size: 26px;
 }
 
-/* CARD */
+/* =========================
+   MAIN CARD
+   ========================= */
 
 .teacher-learners-card {
   width: 100%;
 
   overflow: hidden;
 
-  background: #ffffff;
-
-  border:
-    1px solid #d7e2df;
-
+  border: 1px solid #d7e2df;
   border-radius: 18px;
+
+  background: #ffffff;
 }
 
-/* TOOLBAR */
+/* =========================
+   TOOLBAR
+   ========================= */
 
 .teacher-learners-toolbar {
   display: flex;
@@ -102,8 +104,7 @@
 
   padding: 24px 26px;
 
-  border-bottom:
-    1px solid #e1e9e7;
+  border-bottom: 1px solid #e1e9e7;
 }
 
 .teacher-learners-toolbar h3 {
@@ -128,9 +129,7 @@
 
   padding: 0 14px;
 
-  border:
-    1px solid #c9d7d4;
-
+  border: 1px solid #c9d7d4;
   border-radius: 20px;
 
   outline: none;
@@ -148,10 +147,17 @@
 
   box-shadow:
     0 0 0 3px
-    rgba(0, 125, 114, 0.1);
+    rgba(
+      0,
+      125,
+      114,
+      0.1
+    );
 }
 
-/* TABLE */
+/* =========================
+   TABLE
+   ========================= */
 
 .teacher-learners-table-wrapper {
   width: 100%;
@@ -170,10 +176,9 @@
 .teacher-learners-table th {
   padding: 14px 26px;
 
-  background: #f8fbfa;
+  border-bottom: 1px solid #dce7e4;
 
-  border-bottom:
-    1px solid #dce7e4;
+  background: #f8fbfa;
 
   color: #70848a;
 
@@ -190,10 +195,11 @@
 .teacher-learners-table td {
   padding: 18px 26px;
 
-  border-bottom:
-    1px solid #e6edeb;
+  border-bottom: 1px solid #e6edeb;
 
   color: #536a72;
+
+  vertical-align: middle;
 }
 
 .teacher-learners-table
@@ -215,9 +221,11 @@
   font-weight: 700;
 }
 
-/* STATUS */
+/* =========================
+   STATUS
+   ========================= */
 
-.teacher-learner-status {
+.teacher-learner-list-status {
   display: inline-flex;
   align-items: center;
 
@@ -227,21 +235,58 @@
 
   border-radius: 14px;
 
-  background: #f0f3f3;
-
-  color: #53666b;
-
   font-size: 11px;
   font-weight: 700;
 }
 
-.teacher-learner-status.active {
+.teacher-learner-list-status.active {
   background: #e4f5ec;
 
   color: #0f6f49;
 }
 
-/* STATES */
+.teacher-learner-list-status.inactive {
+  background: #eef1f1;
+
+  color: #5e7075;
+}
+
+/* =========================
+   VIEW DETAILS BUTTON
+   ========================= */
+
+.teacher-learner-view-button {
+  min-height: 34px;
+
+  padding: 0 14px;
+
+  border: 1px solid #98c6bc;
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  color: #007d72;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.teacher-learner-view-button:hover {
+  border-color: #007d72;
+
+  background: #eff8f5;
+}
+
+/* =========================
+   MESSAGE / ERROR
+   ========================= */
 
 .teacher-learners-message {
   padding: 50px 24px;
@@ -254,10 +299,25 @@
 }
 
 .teacher-learners-error {
-  color: #a52a24;
+  margin-bottom: 18px;
+
+  padding: 11px 14px;
+
+  border: 1px solid #efc4c0;
+  border-radius: 10px;
+
+  background: #fff4f3;
+
+  color: #922f29;
+
+  font-size: 12px;
 }
 
-@media (max-width: 650px) {
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 700px) {
   .teacher-learners-heading {
     align-items: flex-start;
 
@@ -266,6 +326,8 @@
 
   .teacher-learners-total {
     width: 100%;
+
+    box-sizing: border-box;
   }
 
   .teacher-learners-toolbar {
@@ -276,9 +338,11 @@
 
   .teacher-learners-toolbar input {
     width: 100%;
+
+    box-sizing: border-box;
   }
 
   .teacher-learners-table {
-    min-width: 600px;
+    min-width: 760px;
   }
 }

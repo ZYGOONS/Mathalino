@@ -10,15 +10,13 @@ import {
 
 import {
   onAuthStateChanged,
-  type User,
 } from "firebase/auth";
 
 import {
   collection,
-  getDocs,
+  onSnapshot,
   query,
   where,
-  type DocumentData,
   type Timestamp,
 } from "firebase/firestore";
 
@@ -31,250 +29,342 @@ import TeacherLayout from "../components/TeacherLayout";
 
 import "./TeacherActivitiesPage.css";
 
-interface ActivityRow {
+interface Activity {
   id: string;
+
+  teacherId: string;
+
   title: string;
+
   description: string;
+
+  topic: string;
+
+  grade: string;
+
+  difficulty: string;
+
+  minNumber: number;
+  maxNumber: number;
+
+  questionCount: number;
+
   status: string;
-  createdAt: string;
+
+  libraryVisible: boolean;
+
+  trashed: boolean;
+
+  createdAt:
+    | Timestamp
+    | null;
 }
 
-function getActivityTitle(
-  data: DocumentData
+function difficultyLabel(
+  difficulty: string
 ): string {
-  if (
-    typeof data.title === "string" &&
-    data.title.trim()
+  switch (
+    difficulty.toLowerCase()
   ) {
-    return data.title;
-  }
+    case "easy":
+      return "Easy";
 
-  if (
-    typeof data.name === "string" &&
-    data.name.trim()
-  ) {
-    return data.name;
-  }
+    case "average":
+      return "Average";
 
-  if (
-    typeof data.activityName === "string" &&
-    data.activityName.trim()
-  ) {
-    return data.activityName;
-  }
+    case "difficult":
+      return "Difficult";
 
-  return "Untitled Activity";
+    default:
+      return difficulty ||
+        "—";
+  }
 }
 
-function getDescription(
-  data: DocumentData
+function formatDate(
+  timestamp:
+    Timestamp | null
 ): string {
-  if (
-    typeof data.description === "string" &&
-    data.description.trim()
-  ) {
-    return data.description;
+  if (!timestamp) {
+    return "Date unavailable";
   }
 
-  if (
-    typeof data.instructions === "string" &&
-    data.instructions.trim()
-  ) {
-    return data.instructions;
-  }
+  return timestamp
+    .toDate()
+    .toLocaleDateString(
+      "en-US",
+      {
+        month:
+          "short",
 
-  return "—";
-}
+        day:
+          "numeric",
 
-function formatTimestamp(
-  value: unknown
-): string {
-  if (!value) {
-    return "—";
-  }
-
-  const timestamp =
-    value as Timestamp;
-
-  if (
-    typeof timestamp?.toDate ===
-    "function"
-  ) {
-    return timestamp
-      .toDate()
-      .toLocaleDateString(
-        "en-US",
-        {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }
-      );
-  }
-
-  return "—";
-}
-
-function formatStatus(
-  value: string
-): string {
-  if (!value) {
-    return "—";
-  }
-
-  return (
-    value.charAt(0).toUpperCase() +
-    value.slice(1).toLowerCase()
-  );
+        year:
+          "numeric",
+      }
+    );
 }
 
 function TeacherActivitiesPage() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [activities, setActivities] =
-    useState<ActivityRow[]>([]);
+  const [
+    activities,
+    setActivities,
+  ] =
+    useState<Activity[]>(
+      []
+    );
 
-  const [search, setSearch] =
+  const [
+    search,
+    setSearch,
+  ] =
     useState("");
 
-  const [loading, setLoading] =
+  const [
+    topicFilter,
+    setTopicFilter,
+  ] =
+    useState("all");
+
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(true);
 
-  const [error, setError] =
+  const [
+    error,
+    setError,
+  ] =
     useState("");
 
   useEffect(() => {
-    let active = true;
+    let unsubscribeActivities:
+      | (() => void)
+      | undefined;
 
-    const loadActivities = async (
-      user: User
-    ) => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const activitiesQuery =
-          query(
-            collection(
-              db,
-              "activities"
-            ),
-            where(
-              "teacherId",
-              "==",
-              user.uid
-            )
-          );
-
-        const snapshot =
-          await getDocs(
-            activitiesQuery
-          );
-
-        if (!active) {
-          return;
-        }
-
-        const activityList:
-          ActivityRow[] =
-          snapshot.docs.map(
-            (document) => {
-              const data =
-                document.data();
-
-              return {
-                id:
-                  document.id,
-
-                title:
-                  getActivityTitle(
-                    data
-                  ),
-
-                description:
-                  getDescription(
-                    data
-                  ),
-
-                status:
-                  data.status ??
-                  "",
-
-                createdAt:
-                  formatTimestamp(
-                    data.createdAt
-                  ),
-              };
-            }
-          );
-
-        setActivities(
-          activityList
-        );
-      } catch (loadError) {
-        console.error(
-          "Unable to load activities:",
-          loadError
-        );
-
-        if (active) {
-          setError(
-            "Unable to load your activities."
-          );
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    };
-
-    const unsubscribe =
+    const unsubscribeAuth =
       onAuthStateChanged(
         auth,
-        (user) => {
+        (
+          user
+        ) => {
           if (!user) {
             navigate("/");
+
             return;
           }
 
-          void loadActivities(
-            user
-          );
+          const activitiesQuery =
+            query(
+              collection(
+                db,
+                "activities"
+              ),
+              where(
+                "teacherId",
+                "==",
+                user.uid
+              )
+            );
+
+          unsubscribeActivities =
+            onSnapshot(
+              activitiesQuery,
+              (
+                snapshot
+              ) => {
+                const list =
+                  snapshot.docs
+                    .map(
+                      (
+                        activityDocument
+                      ): Activity => {
+                        const data =
+                          activityDocument.data();
+
+                        return {
+                          id:
+                            activityDocument.id,
+
+                          teacherId:
+                            data.teacherId ??
+                            "",
+
+                          title:
+                            data.title ??
+                            "",
+
+                          description:
+                            data.description ??
+                            "",
+
+                          topic:
+                            data.topic ??
+                            "",
+
+                          grade:
+                            data.grade ??
+                            "",
+
+                          difficulty:
+                            data.difficulty ??
+                            "",
+
+                          minNumber:
+                            Number(
+                              data.minNumber ??
+                                0
+                            ),
+
+                          maxNumber:
+                            Number(
+                              data.maxNumber ??
+                                0
+                            ),
+
+                          questionCount:
+                            Number(
+                              data.questionCount ??
+                                0
+                            ),
+
+                          status:
+                            data.status ??
+                            "active",
+
+                          libraryVisible:
+                            data.libraryVisible !==
+                            false,
+
+                          trashed:
+                            data.trashed ===
+                            true,
+
+                          createdAt:
+                            data.createdAt ??
+                            null,
+                        };
+                      }
+                    )
+                    .filter(
+                      (
+                        activity
+                      ) =>
+                        activity.libraryVisible &&
+                        !activity.trashed
+                    )
+                    .sort(
+                      (
+                        first,
+                        second
+                      ) =>
+                        (
+                          second.createdAt
+                            ?.seconds ??
+                          0
+                        ) -
+                        (
+                          first.createdAt
+                            ?.seconds ??
+                          0
+                        )
+                    );
+
+                setActivities(
+                  list
+                );
+
+                setLoading(
+                  false
+                );
+
+                setError(
+                  ""
+                );
+              },
+              (
+                snapshotError
+              ) => {
+                console.error(
+                  "Could not load activities:",
+                  snapshotError
+                );
+
+                setError(
+                  "Could not load activities."
+                );
+
+                setLoading(
+                  false
+                );
+              }
+            );
         }
       );
 
     return () => {
-      active = false;
+      unsubscribeAuth();
 
-      unsubscribe();
+      unsubscribeActivities?.();
     };
-  }, [navigate]);
+  }, [
+    navigate,
+  ]);
 
   const filteredActivities =
-    useMemo(() => {
-      const keyword =
-        search
-          .trim()
-          .toLowerCase();
+    useMemo(
+      () => {
+        const normalizedSearch =
+          search
+            .trim()
+            .toLowerCase();
 
-      if (!keyword) {
-        return activities;
-      }
+        return activities.filter(
+          (
+            activity
+          ) => {
+            const matchesSearch =
+              !normalizedSearch ||
+              activity.title
+                .toLowerCase()
+                .includes(
+                  normalizedSearch
+                ) ||
+              activity.topic
+                .toLowerCase()
+                .includes(
+                  normalizedSearch
+                ) ||
+              activity.grade
+                .toLowerCase()
+                .includes(
+                  normalizedSearch
+                );
 
-      return activities.filter(
-        (activity) =>
-          activity.title
-            .toLowerCase()
-            .includes(keyword) ||
-          activity.description
-            .toLowerCase()
-            .includes(keyword)
-      );
-    }, [
-      activities,
-      search,
-    ]);
+            const matchesTopic =
+              topicFilter ===
+                "all" ||
+              activity.topic ===
+                topicFilter;
+
+            return (
+              matchesSearch &&
+              matchesTopic
+            );
+          }
+        );
+      },
+      [
+        activities,
+        search,
+        topicFilter,
+      ]
+    );
 
   return (
     <TeacherLayout>
@@ -292,51 +382,53 @@ function TeacherActivitiesPage() {
           </h2>
 
           <p>
-            View learning activities created
-            under your teacher account.
+            Create and manage mathematics
+            activities for your learners.
           </p>
 
         </div>
 
-        <div className="teacher-activities-total">
-
-          <span>
-            TOTAL ACTIVITIES
-          </span>
-
-          <strong>
-            {loading
-              ? "—"
-              : activities.length}
-          </strong>
-
-        </div>
+        <button
+          type="button"
+          className="teacher-activities-create"
+          onClick={() =>
+            navigate(
+              "/teacher/activities/create"
+            )
+          }
+        >
+          + Create Activity
+        </button>
 
       </div>
 
-      <section className="teacher-activities-card">
+      {error && (
+        <div
+          className="teacher-activities-error"
+          role="alert"
+        >
+          {error}
+        </div>
+      )}
 
-        <div className="teacher-activities-toolbar">
+      <section className="teacher-activities-toolbar">
 
-          <div>
+        <div className="teacher-activities-search">
 
-            <h3>
-              Learning Activities
-            </h3>
-
-            <p>
-              Only activities belonging to
-              your account are displayed.
-            </p>
-
-          </div>
+          <label htmlFor="teacher-activity-search">
+            SEARCH ACTIVITIES
+          </label>
 
           <input
+            id="teacher-activity-search"
             type="search"
-            value={search}
-            placeholder="Search activity..."
-            aria-label="Search activities"
-            onChange={(event) =>
+            placeholder="Search by title, topic, or grade..."
+            value={
+              search
+            }
+            onChange={(
+              event
+            ) =>
               setSearch(
                 event.target.value
               )
@@ -345,113 +437,248 @@ function TeacherActivitiesPage() {
 
         </div>
 
-        {loading && (
-          <div className="teacher-activities-message">
-            Loading activities...
-          </div>
-        )}
+        <div className="teacher-activities-filter">
 
-        {!loading &&
-          error && (
-            <div
-              className="teacher-activities-message teacher-activities-error"
-              role="alert"
-            >
-              {error}
-            </div>
-          )}
+          <label htmlFor="teacher-activity-topic">
+            TOPIC
+          </label>
 
-        {!loading &&
-          !error &&
-          filteredActivities.length ===
-            0 && (
-            <div className="teacher-activities-message">
-              {search
-                ? "No activities match your search."
-                : "No activities have been created for this teacher account yet."}
-            </div>
-          )}
+          <select
+            id="teacher-activity-topic"
+            value={
+              topicFilter
+            }
+            onChange={(
+              event
+            ) =>
+              setTopicFilter(
+                event.target.value
+              )
+            }
+          >
+            <option value="all">
+              All Topics
+            </option>
 
-        {!loading &&
-          !error &&
-          filteredActivities.length >
-            0 && (
-            <div className="teacher-activities-table-wrapper">
+            <option value="Number Sense">
+              Number Sense
+            </option>
 
-              <table className="teacher-activities-table">
+            <option value="Addition">
+              Addition
+            </option>
 
-                <thead>
-                  <tr>
-                    <th>
-                      Activity
-                    </th>
+            <option value="Subtraction">
+              Subtraction
+            </option>
+          </select>
 
-                    <th>
-                      Description
-                    </th>
-
-                    <th>
-                      Status
-                    </th>
-
-                    <th>
-                      Created
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-
-                  {filteredActivities.map(
-                    (activity) => (
-                      <tr
-                        key={
-                          activity.id
-                        }
-                      >
-
-                        <td className="teacher-activity-title">
-                          {
-                            activity.title
-                          }
-                        </td>
-
-                        <td className="teacher-activity-description">
-                          {
-                            activity.description
-                          }
-                        </td>
-
-                        <td>
-                          {activity.status ? (
-                            <span className="teacher-activity-status">
-                              {formatStatus(
-                                activity.status
-                              )}
-                            </span>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-
-                        <td>
-                          {
-                            activity.createdAt
-                          }
-                        </td>
-
-                      </tr>
-                    )
-                  )}
-
-                </tbody>
-
-              </table>
-
-            </div>
-          )}
+        </div>
 
       </section>
+
+      <div className="teacher-activities-summary">
+
+        <strong>
+          {
+            filteredActivities.length
+          }
+        </strong>
+
+        <span>
+          {filteredActivities.length ===
+          1
+            ? "activity"
+            : "activities"}
+        </span>
+
+      </div>
+
+      {loading && (
+        <div className="teacher-activities-loading">
+          Loading activities...
+        </div>
+      )}
+
+      {!loading &&
+        filteredActivities.length ===
+          0 && (
+          <section className="teacher-activities-empty">
+
+            <h3>
+              {activities.length ===
+              0
+                ? "No activities yet"
+                : "No matching activities"}
+            </h3>
+
+            <p>
+              {activities.length ===
+              0
+                ? "Create your first Mathalino activity to begin assigning learning tasks."
+                : "Try changing your search or topic filter."}
+            </p>
+
+            {activities.length ===
+              0 && (
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    "/teacher/activities/create"
+                  )
+                }
+              >
+                Create Activity
+              </button>
+            )}
+
+          </section>
+        )}
+
+      {!loading &&
+        filteredActivities.length >
+          0 && (
+          <div className="teacher-activities-list">
+
+            {filteredActivities.map(
+              (
+                activity
+              ) => (
+                <article
+                  key={
+                    activity.id
+                  }
+                  className="teacher-activity-card"
+                >
+
+                  <div className="teacher-activity-card-top">
+
+                    <div>
+
+                      <span className="teacher-activity-topic">
+                        {
+                          activity.topic
+                        }
+                      </span>
+
+                      <h3>
+                        {activity.title ||
+                          "Untitled Activity"}
+                      </h3>
+
+                    </div>
+
+                    <span
+                      className={`teacher-activity-status ${activity.status}`}
+                    >
+                      {activity.status ===
+                      "active"
+                        ? "Active"
+                        : activity.status}
+                    </span>
+
+                  </div>
+
+                  {activity.description && (
+                    <p className="teacher-activity-description">
+                      {
+                        activity.description
+                      }
+                    </p>
+                  )}
+
+                  <div className="teacher-activity-meta">
+
+                    <div>
+
+                      <span>
+                        GRADE
+                      </span>
+
+                      <strong>
+                        {activity.grade ||
+                          "—"}
+                      </strong>
+
+                    </div>
+
+                    <div>
+
+                      <span>
+                        DIFFICULTY
+                      </span>
+
+                      <strong>
+                        {difficultyLabel(
+                          activity.difficulty
+                        )}
+                      </strong>
+
+                    </div>
+
+                    <div>
+
+                      <span>
+                        RANGE
+                      </span>
+
+                      <strong>
+                        {
+                          activity.minNumber
+                        }
+                        –
+                        {
+                          activity.maxNumber
+                        }
+                      </strong>
+
+                    </div>
+
+                    <div>
+
+                      <span>
+                        QUESTIONS
+                      </span>
+
+                      <strong>
+                        {
+                          activity.questionCount
+                        }
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                  <div className="teacher-activity-card-footer">
+
+                    <span>
+                      Created{" "}
+                      {formatDate(
+                        activity.createdAt
+                      )}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          `/teacher/activities/${activity.id}`
+                        )
+                      }
+                    >
+                      Manage
+                    </button>
+
+                  </div>
+
+                </article>
+              )
+            )}
+
+          </div>
+        )}
 
     </TeacherLayout>
   );

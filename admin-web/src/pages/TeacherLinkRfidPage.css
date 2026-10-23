@@ -1,0 +1,378 @@
+.teacher-rfid-heading {
+  margin-bottom: 25px;
+}
+
+.teacher-rfid-back {
+  display: block;
+
+  margin-bottom: 18px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #007d72;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-rfid-eyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #007d72;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.teacher-rfid-heading h2 {
+  margin: 0;
+
+  color: #102d3c;
+
+  font-size: 30px;
+  font-weight: 750;
+}
+
+.teacher-rfid-heading p {
+  margin: 8px 0 0;
+
+  color: #71838b;
+
+  font-size: 14px;
+}
+
+/* LAYOUT */
+
+.teacher-rfid-layout {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 16px;
+}
+
+.teacher-rfid-card {
+  padding: 22px;
+
+  border: 1px solid #d7e2df;
+  border-radius: 18px;
+
+  background: #ffffff;
+}
+
+.teacher-rfid-scan-card {
+  grid-column:
+    1 / -1;
+
+  text-align: center;
+}
+
+.teacher-rfid-section-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #007d72;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.2px;
+}
+
+.teacher-rfid-card h3 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 18px;
+}
+
+.teacher-rfid-card p {
+  max-width: 540px;
+
+  margin: 8px auto 0;
+
+  color: #71838b;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+/* CURRENT CARD */
+
+.teacher-rfid-current {
+  margin-top: 17px;
+
+  padding: 14px;
+
+  border-radius: 12px;
+
+  background: #f4f8f7;
+}
+
+.teacher-rfid-current span,
+.teacher-rfid-board-selected span,
+.teacher-rfid-detected-uid span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #71858a;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+.teacher-rfid-current strong {
+  color: #8c625f;
+
+  font-size: 12px;
+}
+
+.teacher-rfid-current strong.linked {
+  color: #0f6f49;
+}
+
+.teacher-rfid-current small {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #7c8d92;
+
+  font-size: 10px;
+}
+
+/* BOARD */
+
+.teacher-rfid-card select {
+  width: 100%;
+  height: 43px;
+
+  margin-top: 17px;
+
+  padding: 0 12px;
+
+  border: 1px solid #cbd9d6;
+  border-radius: 11px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #153844;
+
+  font: inherit;
+  font-size: 12px;
+}
+
+.teacher-rfid-card select:focus {
+  border-color: #007d72;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      0,
+      125,
+      114,
+      0.1
+    );
+}
+
+.teacher-rfid-board-selected {
+  margin-top: 13px;
+
+  padding: 13px;
+
+  border-radius: 11px;
+
+  background: #eff8f5;
+}
+
+.teacher-rfid-board-selected strong {
+  display: block;
+
+  color: #153844;
+
+  font-size: 12px;
+}
+
+.teacher-rfid-board-selected small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #74868b;
+
+  font-size: 10px;
+}
+
+.teacher-rfid-no-board {
+  margin-top: 17px;
+
+  padding: 14px;
+
+  border-radius: 11px;
+
+  background: #fff4e5;
+
+  color: #795c18;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+/* WAITING / DETECTED */
+
+.teacher-rfid-waiting-icon,
+.teacher-rfid-detected-icon {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin:
+    18px auto 13px;
+
+  border-radius: 50%;
+
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.teacher-rfid-waiting-icon {
+  background: #eef5f3;
+
+  color: #70848a;
+}
+
+.teacher-rfid-detected-icon {
+  background: #e4f5ec;
+
+  color: #0f6f49;
+}
+
+.teacher-rfid-detected-uid {
+  max-width: 420px;
+
+  margin:
+    17px auto 0;
+
+  padding: 14px;
+
+  border-radius: 12px;
+
+  background: #f4f8f7;
+
+  text-align: left;
+}
+
+.teacher-rfid-detected-uid strong {
+  color: #153844;
+
+  font-size: 13px;
+
+  overflow-wrap: anywhere;
+}
+
+.teacher-rfid-link-button {
+  min-height: 40px;
+
+  margin-top: 18px;
+
+  padding: 0 19px;
+
+  border: none;
+  border-radius: 20px;
+
+  background: #007d72;
+
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.teacher-rfid-link-button:hover:not(:disabled) {
+  background: #006d64;
+}
+
+.teacher-rfid-link-button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+/* STATES */
+
+.teacher-rfid-error,
+.teacher-rfid-success {
+  margin-bottom: 18px;
+
+  padding: 11px 14px;
+
+  border-radius: 10px;
+
+  font-size: 12px;
+}
+
+.teacher-rfid-error {
+  border: 1px solid #efc4c0;
+
+  background: #fff4f3;
+
+  color: #922f29;
+}
+
+.teacher-rfid-success {
+  border: 1px solid #b7ddcf;
+
+  background: #eff8f5;
+
+  color: #0f6f49;
+}
+
+.teacher-rfid-loading {
+  padding: 55px;
+
+  color: #71838b;
+
+  text-align: center;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 750px) {
+  .teacher-rfid-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-rfid-scan-card {
+    grid-column: auto;
+  }
+}
