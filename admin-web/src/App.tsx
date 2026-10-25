@@ -11,7 +11,9 @@ import UserAccountsPage from "./pages/UserAccountsPage";
 import UserDetailsPage from "./pages/UserDetailsPage";
 
 import TeacherDashboardPage from "./pages/TeacherDashboardPage";
+
 import TeacherLearnersPage from "./pages/TeacherLearnersPage";
+import TeacherCreateLearnerPage from "./pages/TeacherCreateLearnerPage";
 import TeacherLearnerDetailsPage from "./pages/TeacherLearnerDetailsPage";
 import TeacherEditLearnerPage from "./pages/TeacherEditLearnerPage";
 import TeacherLinkRfidPage from "./pages/TeacherLinkRfidPage";
@@ -19,14 +21,19 @@ import TeacherInvitationCodePage from "./pages/TeacherInvitationCodePage";
 import TeacherLearnerAssignmentsPage from "./pages/TeacherLearnerAssignmentsPage";
 import TeacherLearnerPerformancePage from "./pages/TeacherLearnerPerformancePage";
 import TeacherSessionResultsPage from "./pages/TeacherSessionResultsPage";
+import TeacherRecommendationHistoryPage from "./pages/TeacherRecommendationHistoryPage";
 
 import TeacherActivitiesPage from "./pages/TeacherActivitiesPage";
 import TeacherCreateActivityPage from "./pages/TeacherCreateActivityPage";
 import TeacherActivityDetailsPage from "./pages/TeacherActivityDetailsPage";
+import TeacherEditActivityPage from "./pages/TeacherEditActivityPage";
+import TeacherQuestionPreviewPage from "./pages/TeacherQuestionPreviewPage";
 
 import TeacherGuardianRequestsPage from "./pages/TeacherGuardianRequestsPage";
+
 import TeacherSmartBoardsPage from "./pages/TeacherSmartBoardsPage";
 import TeacherLiveSessionsPage from "./pages/TeacherLiveSessionsPage";
+
 import TeacherAccountPage from "./pages/TeacherAccountPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -35,6 +42,10 @@ function App() {
   return (
     <Routes>
 
+      {/* =====================
+          LOGIN
+          ===================== */}
+
       <Route
         path="/"
         element={
@@ -42,7 +53,9 @@ function App() {
         }
       />
 
-      {/* ADMIN */}
+      {/* =====================
+          ADMIN
+          ===================== */}
 
       <Route
         path="/dashboard"
@@ -77,7 +90,9 @@ function App() {
         }
       />
 
-      {/* TEACHER DASHBOARD */}
+      {/* =====================
+          TEACHER DASHBOARD
+          ===================== */}
 
       <Route
         path="/teacher-dashboard"
@@ -90,7 +105,9 @@ function App() {
         }
       />
 
-      {/* LEARNERS */}
+      {/* =====================
+          LEARNERS
+          ===================== */}
 
       <Route
         path="/teacher/learners"
@@ -104,12 +121,12 @@ function App() {
       />
 
       <Route
-        path="/teacher/learners/:learnerId"
+        path="/teacher/learners/create"
         element={
           <ProtectedRoute
             allowedRole="teacher"
           >
-            <TeacherLearnerDetailsPage />
+            <TeacherCreateLearnerPage />
           </ProtectedRoute>
         }
       />
@@ -180,7 +197,31 @@ function App() {
         }
       />
 
-      {/* ACTIVITIES */}
+      <Route
+        path="/teacher/learners/:learnerId/recommendation-history"
+        element={
+          <ProtectedRoute
+            allowedRole="teacher"
+          >
+            <TeacherRecommendationHistoryPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/learners/:learnerId"
+        element={
+          <ProtectedRoute
+            allowedRole="teacher"
+          >
+            <TeacherLearnerDetailsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* =====================
+          ACTIVITIES
+          ===================== */}
 
       <Route
         path="/teacher/activities"
@@ -205,6 +246,28 @@ function App() {
       />
 
       <Route
+        path="/teacher/activities/:activityId/edit"
+        element={
+          <ProtectedRoute
+            allowedRole="teacher"
+          >
+            <TeacherEditActivityPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/teacher/activities/:activityId/questions"
+        element={
+          <ProtectedRoute
+            allowedRole="teacher"
+          >
+            <TeacherQuestionPreviewPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/teacher/activities/:activityId"
         element={
           <ProtectedRoute
@@ -215,7 +278,9 @@ function App() {
         }
       />
 
-      {/* GUARDIANS */}
+      {/* =====================
+          GUARDIAN REQUESTS
+          ===================== */}
 
       <Route
         path="/teacher/guardian-requests"
@@ -228,7 +293,9 @@ function App() {
         }
       />
 
-      {/* SMART BOARD */}
+      {/* =====================
+          SMART BOARDS
+          ===================== */}
 
       <Route
         path="/teacher/boards"
@@ -252,7 +319,9 @@ function App() {
         }
       />
 
-      {/* ACCOUNT */}
+      {/* =====================
+          ACCOUNT
+          ===================== */}
 
       <Route
         path="/teacher/account"
@@ -264,6 +333,10 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* =====================
+          FALLBACK
+          ===================== */}
 
       <Route
         path="*"

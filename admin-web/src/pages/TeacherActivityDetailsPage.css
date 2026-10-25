@@ -166,7 +166,7 @@
 }
 
 /* =========================
-   DETAILS GRID
+   DETAILS
    ========================= */
 
 .teacher-activity-details-grid {
@@ -247,7 +247,7 @@
 }
 
 /* =========================
-   QUESTION SUMMARY
+   QUESTIONS
    ========================= */
 
 .teacher-activity-question-state {
@@ -321,7 +321,7 @@
 }
 
 /* =========================
-   SYSTEM INFORMATION
+   SYSTEM
    ========================= */
 
 .teacher-activity-system-grid {
@@ -391,6 +391,12 @@
   font: inherit;
 
   text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .teacher-activity-details-action strong {
@@ -405,10 +411,22 @@
   line-height: 1.5;
 }
 
+.teacher-activity-details-action:hover:not(:disabled) {
+  border-color: #9bc8be;
+
+  background: #f6fbf9;
+}
+
 .teacher-activity-details-action.primary {
   border-color: #b9d7d0;
 
   background: #f2f9f7;
+}
+
+.teacher-activity-details-action.primary:hover:not(:disabled) {
+  border-color: #007d72;
+
+  background: #e8f6f2;
 }
 
 .teacher-activity-details-action.danger {

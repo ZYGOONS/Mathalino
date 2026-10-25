@@ -35,6 +35,7 @@ interface Learner {
 
   firstName: string;
   lastName: string;
+
   fullName: string;
 
   status: string;
@@ -47,7 +48,8 @@ function formatDate(
 ): string {
   if (
     !value ||
-    typeof value !== "object"
+    typeof value !==
+      "object"
   ) {
     return "—";
   }
@@ -63,9 +65,14 @@ function formatDate(
     return date.toLocaleDateString(
       "en-US",
       {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
+        month:
+          "short",
+
+        day:
+          "numeric",
+
+        year:
+          "numeric",
       }
     );
   }
@@ -90,7 +97,10 @@ function getLearnerName(
     .join(" ")
     .trim();
 
-  return name || "Unnamed Learner";
+  return (
+    name ||
+    "Unnamed Learner"
+  );
 }
 
 function TeacherLearnersPage() {
@@ -101,7 +111,9 @@ function TeacherLearnersPage() {
     learners,
     setLearners,
   ] =
-    useState<Learner[]>([]);
+    useState<Learner[]>(
+      []
+    );
 
   const [
     search,
@@ -140,11 +152,17 @@ function TeacherLearnersPage() {
         ) => {
           if (!user) {
             navigate("/");
+
             return;
           }
 
-          setLoading(true);
-          setError("");
+          setLoading(
+            true
+          );
+
+          setError(
+            ""
+          );
 
           const learnersQuery =
             query(
@@ -152,6 +170,7 @@ function TeacherLearnersPage() {
                 db,
                 "learners"
               ),
+
               where(
                 "teacherId",
                 "==",
@@ -249,13 +268,11 @@ function TeacherLearnersPage() {
     return () => {
       unsubscribeAuth();
 
-      if (
-        unsubscribeLearners
-      ) {
-        unsubscribeLearners();
-      }
+      unsubscribeLearners?.();
     };
-  }, [navigate]);
+  }, [
+    navigate,
+  ]);
 
   /*
    * =========================
@@ -294,12 +311,14 @@ function TeacherLearnersPage() {
       ]
     );
 
+  /*
+   * =========================
+   * UI
+   * =========================
+   */
+
   return (
     <TeacherLayout>
-
-      {/* =========================
-          PAGE HEADING
-          ========================= */}
 
       <div className="teacher-learners-heading">
 
@@ -314,31 +333,44 @@ function TeacherLearnersPage() {
           </h2>
 
           <p>
-            View learners assigned to your
-            teacher account.
+            View and manage learners
+            assigned to your teacher
+            account.
           </p>
 
         </div>
 
-        <div className="teacher-learners-total">
+        <div className="teacher-learners-heading-actions">
 
-          <span>
-            TOTAL LEARNERS
-          </span>
+          <div className="teacher-learners-total">
 
-          <strong>
-            {
-              learners.length
+            <span>
+              TOTAL LEARNERS
+            </span>
+
+            <strong>
+              {
+                learners.length
+              }
+            </strong>
+
+          </div>
+
+          <button
+            type="button"
+            className="teacher-learners-create"
+            onClick={() =>
+              navigate(
+                "/teacher/learners/create"
+              )
             }
-          </strong>
+          >
+            + Create Learner
+          </button>
 
         </div>
 
       </div>
-
-      {/* =========================
-          ERROR
-          ========================= */}
 
       {error && (
         <div
@@ -348,10 +380,6 @@ function TeacherLearnersPage() {
           {error}
         </div>
       )}
-
-      {/* =========================
-          LEARNER TABLE
-          ========================= */}
 
       <section className="teacher-learners-card">
 
@@ -397,9 +425,11 @@ function TeacherLearnersPage() {
           filteredLearners.length ===
             0 && (
             <div className="teacher-learners-message">
+
               {search
                 ? "No learners match your search."
-                : "No learners found."}
+                : "No learners found. Create your first learner to get started."}
+
             </div>
           )}
 
@@ -447,11 +477,9 @@ function TeacherLearnersPage() {
                       >
 
                         <td className="teacher-learner-name">
-
                           {getLearnerName(
                             learner
                           )}
-
                         </td>
 
                         <td>
@@ -473,11 +501,9 @@ function TeacherLearnersPage() {
                         </td>
 
                         <td>
-
                           {formatDate(
                             learner.createdAt
                           )}
-
                         </td>
 
                         <td>

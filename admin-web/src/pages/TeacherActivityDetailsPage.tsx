@@ -25,6 +25,10 @@ import {
 
 import TeacherLayout from "../components/TeacherLayout";
 
+import {
+  setActivityTrashed,
+} from "../services/activityTrash";
+
 import "./TeacherActivityDetailsPage.css";
 
 interface Activity {
@@ -82,7 +86,8 @@ function difficultyLabel(
       return "Difficult";
 
     default:
-      return difficulty || "—";
+      return difficulty ||
+        "—";
   }
 }
 
@@ -99,7 +104,8 @@ function statusLabel(
       return "Archived";
 
     default:
-      return status || "Unknown";
+      return status ||
+        "Unknown";
   }
 }
 
@@ -160,14 +166,26 @@ function TeacherActivityDetailsPage() {
     useState(true);
 
   const [
+    updatingTrash,
+    setUpdatingTrash,
+  ] =
+    useState(false);
+
+  const [
     error,
     setError,
   ] =
     useState("");
 
+  const [
+    actionError,
+    setActionError,
+  ] =
+    useState("");
+
   /*
    * =========================
-   * LOAD ACTIVITY
+   * LOAD
    * =========================
    */
 
@@ -371,6 +389,81 @@ function TeacherActivityDetailsPage() {
     navigate,
   ]);
 
+  /*
+   * =========================
+   * TRASH / RESTORE
+   * =========================
+   */
+
+  const handleTrashToggle =
+    async () => {
+      if (
+        !activity
+      ) {
+        return;
+      }
+
+      const trash =
+        !activity.trashed;
+
+      const confirmed =
+        window.confirm(
+          trash
+            ? `${activity.title} will be hidden from the library and new assignments. Existing assignments and results will stay saved. You can restore it from Trash.\n\nMove to Trash?`
+            : `${activity.title} will return to the Activity Library.\n\nRestore activity?`
+        );
+
+      if (
+        !confirmed
+      ) {
+        return;
+      }
+
+      try {
+        setUpdatingTrash(
+          true
+        );
+
+        setActionError(
+          ""
+        );
+
+        await setActivityTrashed(
+          activity.id,
+          trash
+        );
+
+        /*
+         * Android returns the teacher to
+         * the library after moving an
+         * activity to Trash.
+         */
+        if (trash) {
+          navigate(
+            "/teacher/activities"
+          );
+        }
+      } catch (
+        trashError
+      ) {
+        console.error(
+          "Could not update activity:",
+          trashError
+        );
+
+        setActionError(
+          trashError instanceof
+          Error
+            ? trashError.message
+            : "Could not update activity."
+        );
+      } finally {
+        setUpdatingTrash(
+          false
+        );
+      }
+    };
+
   return (
     <TeacherLayout>
 
@@ -397,9 +490,8 @@ function TeacherActivityDetailsPage() {
         </h2>
 
         <p>
-          Review this mathematics
-          activity and manage its
-          content.
+          Review this mathematics activity
+          and manage its content.
         </p>
 
       </div>
@@ -413,6 +505,15 @@ function TeacherActivityDetailsPage() {
         </div>
       )}
 
+      {actionError && (
+        <div
+          className="teacher-activity-details-error"
+          role="alert"
+        >
+          {actionError}
+        </div>
+      )}
+
       {loading && (
         <div className="teacher-activity-details-loading">
           Loading activity...
@@ -423,7 +524,7 @@ function TeacherActivityDetailsPage() {
         activity && (
           <>
 
-            {/* MAIN INFORMATION */}
+            {/* ACTIVITY */}
 
             <section className="teacher-activity-details-card">
 
@@ -444,11 +545,17 @@ function TeacherActivityDetailsPage() {
                 </div>
 
                 <span
-                  className={`teacher-activity-details-status ${activity.status}`}
+                  className={`teacher-activity-details-status ${
+                    activity.trashed
+                      ? "archived"
+                      : activity.status
+                  }`}
                 >
-                  {statusLabel(
-                    activity.status
-                  )}
+                  {activity.trashed
+                    ? "In Trash"
+                    : statusLabel(
+                        activity.status
+                      )}
                 </span>
 
               </div>
@@ -469,7 +576,6 @@ function TeacherActivityDetailsPage() {
               <div className="teacher-activity-details-grid">
 
                 <div>
-
                   <span>
                     TOPIC
                   </span>
@@ -478,11 +584,9 @@ function TeacherActivityDetailsPage() {
                     {activity.topic ||
                       "—"}
                   </strong>
-
                 </div>
 
                 <div>
-
                   <span>
                     GRADE LEVEL
                   </span>
@@ -491,11 +595,9 @@ function TeacherActivityDetailsPage() {
                     {activity.grade ||
                       "—"}
                   </strong>
-
                 </div>
 
                 <div>
-
                   <span>
                     DIFFICULTY
                   </span>
@@ -505,11 +607,9 @@ function TeacherActivityDetailsPage() {
                       activity.difficulty
                     )}
                   </strong>
-
                 </div>
 
                 <div>
-
                   <span>
                     NUMBER RANGE
                   </span>
@@ -523,11 +623,9 @@ function TeacherActivityDetailsPage() {
                       activity.maxNumber
                     }
                   </strong>
-
                 </div>
 
                 <div>
-
                   <span>
                     QUESTIONS
                   </span>
@@ -537,11 +635,9 @@ function TeacherActivityDetailsPage() {
                       activity.questionCount
                     }
                   </strong>
-
                 </div>
 
                 <div>
-
                   <span>
                     SAVED QUESTIONS
                   </span>
@@ -555,14 +651,13 @@ function TeacherActivityDetailsPage() {
                       activity.questionCount
                     }
                   </strong>
-
                 </div>
 
               </div>
 
             </section>
 
-            {/* QUESTION INFORMATION */}
+            {/* QUESTIONS */}
 
             <section className="teacher-activity-details-card teacher-activity-question-summary">
 
@@ -625,20 +720,16 @@ function TeacherActivityDetailsPage() {
               </div>
 
               <p>
-                Questions are generated
-                when needed by the
-                Mathalino activity
-                generator. The upcoming
-                Question Preview feature
-                will allow you to inspect
-                and save generated
-                questions before assigning
-                the activity.
+                Preview Questions lets
+                you generate, review and
+                save the exact question
+                set used by this
+                activity.
               </p>
 
             </section>
 
-            {/* SYSTEM INFORMATION */}
+            {/* SYSTEM */}
 
             <section className="teacher-activity-details-card">
 
@@ -657,7 +748,6 @@ function TeacherActivityDetailsPage() {
               <div className="teacher-activity-system-grid">
 
                 <div>
-
                   <span>
                     STATUS
                   </span>
@@ -667,11 +757,9 @@ function TeacherActivityDetailsPage() {
                       activity.status
                     )}
                   </strong>
-
                 </div>
 
                 <div>
-
                   <span>
                     LIBRARY
                   </span>
@@ -681,11 +769,21 @@ function TeacherActivityDetailsPage() {
                       ? "Visible"
                       : "Hidden"}
                   </strong>
-
                 </div>
 
                 <div>
+                  <span>
+                    TRASH
+                  </span>
 
+                  <strong>
+                    {activity.trashed
+                      ? "In Trash"
+                      : "No"}
+                  </strong>
+                </div>
+
+                <div>
                   <span>
                     ASSIGNMENT REVISION
                   </span>
@@ -695,11 +793,9 @@ function TeacherActivityDetailsPage() {
                       activity.assignmentRevision
                     }
                   </strong>
-
                 </div>
 
                 <div>
-
                   <span>
                     CREATED
                   </span>
@@ -709,11 +805,9 @@ function TeacherActivityDetailsPage() {
                       activity.createdAt
                     )}
                   </strong>
-
                 </div>
 
                 <div>
-
                   <span>
                     LAST UPDATED
                   </span>
@@ -723,7 +817,6 @@ function TeacherActivityDetailsPage() {
                       activity.updatedAt
                     )}
                   </strong>
-
                 </div>
 
               </div>
@@ -751,7 +844,14 @@ function TeacherActivityDetailsPage() {
                 <button
                   type="button"
                   className="teacher-activity-details-action primary"
-                  disabled
+                  disabled={
+                    updatingTrash
+                  }
+                  onClick={() =>
+                    navigate(
+                      `/teacher/activities/${activity.id}/edit`
+                    )
+                  }
                 >
                   <strong>
                     Edit Activity
@@ -767,7 +867,14 @@ function TeacherActivityDetailsPage() {
                 <button
                   type="button"
                   className="teacher-activity-details-action"
-                  disabled
+                  disabled={
+                    updatingTrash
+                  }
+                  onClick={() =>
+                    navigate(
+                      `/teacher/activities/${activity.id}/questions`
+                    )
+                  }
                 >
                   <strong>
                     Preview Questions
@@ -781,18 +888,32 @@ function TeacherActivityDetailsPage() {
 
                 <button
                   type="button"
-                  className="teacher-activity-details-action danger"
-                  disabled
+                  className={`teacher-activity-details-action ${
+                    activity.trashed
+                      ? "primary"
+                      : "danger"
+                  }`}
+                  disabled={
+                    updatingTrash
+                  }
+                  onClick={() => {
+                    void handleTrashToggle();
+                  }}
                 >
                   <strong>
-                    Archive Activity
+                    {updatingTrash
+                      ? "Updating..."
+                      : activity.trashed
+                        ? "Restore Activity"
+                        : "Move to Trash"}
                   </strong>
 
                   <span>
-                    Remove this activity
-                    from the active
-                    library.
+                    {activity.trashed
+                      ? "Return this activity to the active Activity Library."
+                      : "Hide this activity from the library and prevent new assignments."}
                   </span>
+
                 </button>
 
               </div>

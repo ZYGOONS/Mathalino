@@ -38,6 +38,12 @@ import {
 
 import "./TeacherLearnerPerformancePage.css";
 
+/*
+ * =========================
+ * TYPES
+ * =========================
+ */
+
 interface Learner {
   id: string;
 
@@ -94,6 +100,12 @@ const SUPPORTED_TOPICS = [
   "Addition",
   "Subtraction",
 ];
+
+/*
+ * =========================
+ * HELPERS
+ * =========================
+ */
 
 function masteryLevel(
   percentage: number
@@ -186,16 +198,14 @@ function capitalized(
   value: string
 ): string {
   if (!value) {
-    return value;
+    return "—";
   }
 
   return (
-    value.charAt(
-      0
-    ).toUpperCase() +
-    value.slice(
-      1
-    )
+    value
+      .charAt(0)
+      .toUpperCase() +
+    value.slice(1)
   );
 }
 
@@ -346,6 +356,12 @@ function recommendationFromData(
   };
 }
 
+/*
+ * =========================
+ * PAGE
+ * =========================
+ */
+
 function TeacherLearnerPerformancePage() {
   const navigate =
     useNavigate();
@@ -427,7 +443,7 @@ function TeacherLearnerPerformancePage() {
 
   /*
    * =========================
-   * LOAD DATA
+   * LOAD
    * =========================
    */
 
@@ -456,6 +472,7 @@ function TeacherLearnerPerformancePage() {
         ) => {
           if (!user) {
             navigate("/");
+
             return;
           }
 
@@ -514,17 +531,23 @@ function TeacherLearnerPerformancePage() {
                 "",
             });
 
+            /*
+             * Assignments
+             */
+
             const assignmentsQuery =
               query(
                 collection(
                   db,
                   "assignments"
                 ),
+
                 where(
                   "teacherId",
                   "==",
                   user.uid
                 ),
+
                 where(
                   "learnerId",
                   "==",
@@ -633,6 +656,10 @@ function TeacherLearnerPerformancePage() {
                 }
               );
 
+            /*
+             * Recommendations
+             */
+
             unsubscribeRecommendations =
               onSnapshot(
                 collection(
@@ -716,6 +743,11 @@ function TeacherLearnerPerformancePage() {
     navigate,
   ]);
 
+  /*
+   * Close open recommendation
+   * disclosures when topic changes.
+   */
+
   useEffect(() => {
     setPreviewOpen(
       false
@@ -752,9 +784,7 @@ function TeacherLearnerPerformancePage() {
             ) =>
               assignment.status
                 .toLowerCase() ===
-                "completed" &&
-              assignment.masteryPercent !==
-                null
+                "completed"
           )
           .sort(
             (
@@ -791,7 +821,8 @@ function TeacherLearnerPerformancePage() {
                 (
                   assignment
                 ) =>
-                  assignment.topic.toLowerCase() ===
+                  assignment.topic
+                    .toLowerCase() ===
                   topic.toLowerCase()
               );
 
@@ -899,8 +930,8 @@ function TeacherLearnerPerformancePage() {
   const handleReview =
     async (
       decision:
-        "approved" |
-        "dismissed"
+        | "approved"
+        | "dismissed"
     ) => {
       if (
         !currentRecommendation
@@ -962,7 +993,7 @@ function TeacherLearnerPerformancePage() {
           reviewError instanceof
           Error
             ? reviewError.message
-            : "Could not update recommendation."
+            : "Could not review recommendation."
         );
       } finally {
         setReviewing(
@@ -970,6 +1001,32 @@ function TeacherLearnerPerformancePage() {
         );
       }
     };
+
+  /*
+   * =========================
+   * LOADING
+   * =========================
+   */
+
+  if (
+    loading
+  ) {
+    return (
+      <TeacherLayout>
+
+        <div className="teacher-performance-loading">
+          Loading learner performance...
+        </div>
+
+      </TeacherLayout>
+    );
+  }
+
+  /*
+   * =========================
+   * UI
+   * =========================
+   */
 
   return (
     <TeacherLayout>
@@ -997,17 +1054,17 @@ function TeacherLearnerPerformancePage() {
             ? fullName(
                 learner
               )
-            : "Performance"}
+            : "Learner Performance"}
         </h2>
 
         {learner && (
           <p>
-            Grade{" "}
             {learner.grade ||
-              "—"}{" "}
-            · Section{" "}
-            {learner.section ||
-              "—"}
+              "Grade not set"}
+
+            {learner.section
+              ? ` · Section ${learner.section}`
+              : ""}
           </p>
         )}
 
@@ -1031,490 +1088,537 @@ function TeacherLearnerPerformancePage() {
         </div>
       )}
 
-      {loading && (
-        <div className="teacher-performance-loading">
-          Loading performance...
-        </div>
-      )}
+      {/* =====================
+          OVERALL
+          ===================== */}
 
-      {!loading &&
-        learner && (
-          <>
+      <section className="teacher-performance-overall">
 
-            <section className="teacher-performance-overall">
+        <span>
+          OVERALL MASTERY
+        </span>
 
-              <span>
-                OVERALL MASTERY
-              </span>
+        <strong>
+          {overallPercentage ===
+          null
+            ? "Not started"
+            : `${overallPercentage}%`}
+        </strong>
 
-              <strong>
-                {overallPercentage ===
-                null
-                  ? "Not started"
-                  : `${overallPercentage}% · ${overallLevel}`}
-              </strong>
+        <p>
+          {overallPercentage ===
+          null
+            ? "Complete an activity to begin measuring mastery."
+            : `${overallLevel} · ${attemptedTopics} of ${SUPPORTED_TOPICS.length} topics attempted`}
+        </p>
 
-              <p>
-                {completedAssignments.length ===
-                0
-                  ? "No completed activities yet."
-                  : `${attemptedTopics} ${
-                      attemptedTopics ===
-                      1
-                        ? "topic"
-                        : "topics"
-                    } attempted`}
-              </p>
+      </section>
 
-            </section>
+      {/* =====================
+          HISTORY / RESULTS
+          ===================== */}
 
-            <div className="teacher-performance-section-heading">
+      <div
+        style={{
+          marginTop:
+            "18px",
+        }}
+      >
 
-              <h3>
-                Topic Mastery
-              </h3>
+        <button
+          type="button"
+          className="teacher-performance-detailed-results"
+          onClick={() =>
+            navigate(
+              `/teacher/learners/${learnerId}/recommendation-history`
+            )
+          }
+        >
+          View recommendation history
+        </button>
 
-            </div>
+        <button
+          type="button"
+          className="teacher-performance-detailed-results"
+          onClick={() =>
+            navigate(
+              `/teacher/learners/${learnerId}/results`
+            )
+          }
+        >
+          View detailed session results
+        </button>
 
-            <section className="teacher-performance-topics">
+      </div>
 
-              {topics.map(
-                (
-                  topic
-                ) => (
-                  <div
-                    key={
-                      topic.topic
-                    }
-                    className="teacher-performance-topic"
-                  >
+      {/* =====================
+          TOPIC MASTERY
+          ===================== */}
 
-                    <div>
+      <div className="teacher-performance-section-heading">
 
-                      <strong>
-                        {
-                          topic.topic
-                        }
-                      </strong>
+        <h3>
+          Topic Mastery
+        </h3>
 
-                      <span>
-                        {
-                          topic.completedCount
-                        }{" "}
-                        completed
-                      </span>
+        <p>
+          Average mastery across completed
+          activities.
+        </p>
 
-                    </div>
+      </div>
 
-                    <div className="teacher-performance-topic-result">
+      <section className="teacher-performance-topics">
 
-                      {topic.percentage ===
-                      null
-                        ? "Not started"
-                        : `${topic.percentage}% · ${topic.level}`}
-
-                    </div>
-
-                  </div>
-                )
-              )}
-
-            </section>
-
-            <div className="teacher-performance-section-heading recommendation">
+        {topics.map(
+          (
+            topic
+          ) => (
+            <div
+              key={
+                topic.topic
+              }
+              className="teacher-performance-topic"
+            >
 
               <div>
 
-                <h3>
-                  Recommendation
-                </h3>
+                <strong>
+                  {
+                    topic.topic
+                  }
+                </strong>
 
-                <p>
-                  {pendingRecommendations}{" "}
-                  pending review
-                </p>
+                <span>
+                  {
+                    topic.completedCount
+                  }{" "}
+                  completed{" "}
+                  {topic.completedCount ===
+                  1
+                    ? "activity"
+                    : "activities"}
+                </span>
 
               </div>
 
-              <select
-                value={
-                  selectedTopic
-                }
-                onChange={(
-                  event
-                ) =>
-                  setSelectedTopic(
-                    event.target.value
-                  )
-                }
-              >
-                {SUPPORTED_TOPICS.map(
-                  (
-                    topic
-                  ) => (
-                    <option
-                      key={
-                        topic
-                      }
-                      value={
-                        topic
-                      }
-                    >
-                      {topic}
-                    </option>
-                  )
-                )}
+              <div className="teacher-performance-topic-result">
 
-              </select>
+                {topic.percentage ===
+                null
+                  ? "Not started"
+                  : `${topic.percentage}% · ${topic.level}`}
+
+              </div>
 
             </div>
+          )
+        )}
 
-            {!currentRecommendation && (
-              <section className="teacher-performance-empty-card">
+      </section>
 
-                Complete a scored{" "}
-                <strong>
-                  {selectedTopic}
-                </strong>{" "}
-                activity to generate its
-                recommendation.
+      {/* =====================
+          RECOMMENDATION
+          ===================== */}
 
-              </section>
+      <div className="teacher-performance-section-heading recommendation">
+
+        <div>
+
+          <h3>
+            Adaptive Recommendation
+          </h3>
+
+          <p>
+            {pendingRecommendations}{" "}
+            pending teacher{" "}
+            {pendingRecommendations ===
+            1
+              ? "review"
+              : "reviews"}
+          </p>
+
+        </div>
+
+        <select
+          value={
+            selectedTopic
+          }
+          onChange={(
+            event
+          ) =>
+            setSelectedTopic(
+              event.target.value
+            )
+          }
+        >
+          {SUPPORTED_TOPICS.map(
+            (
+              topic
+            ) => (
+              <option
+                key={
+                  topic
+                }
+                value={
+                  topic
+                }
+              >
+                {topic}
+              </option>
+            )
+          )}
+        </select>
+
+      </div>
+
+      {!currentRecommendation && (
+        <section className="teacher-performance-empty-card">
+
+          No recommendation is available
+          for {selectedTopic} yet.
+
+        </section>
+      )}
+
+      {currentRecommendation && (
+        <section className="teacher-performance-recommendation">
+
+          <span
+            className={`teacher-performance-recommendation-status ${currentRecommendation.status}`}
+          >
+            {recommendationStatus(
+              currentRecommendation.status
             )}
+          </span>
 
-            {currentRecommendation && (
-              <section className="teacher-performance-recommendation">
+          <h4>
+            {
+              currentRecommendation.topic
+            }{" "}
+            practice
+          </h4>
 
-                <span
-                  className={`teacher-performance-recommendation-status ${currentRecommendation.status}`}
-                >
-                  {recommendationStatus(
-                    currentRecommendation.status
-                  )}
-                </span>
+          <p className="teacher-performance-recommendation-summary">
 
-                <h4>
-                  {
-                    currentRecommendation.topic
-                  }{" "}
-                  ·{" "}
-                  {capitalized(
-                    currentRecommendation.recommendedDifficulty
-                  )}{" "}
-                  ·{" "}
-                  {
-                    currentRecommendation.recommendedMinNumber
-                  }
-                  –
-                  {
-                    currentRecommendation.recommendedMaxNumber
-                  }
-                </h4>
+            {capitalized(
+              currentRecommendation.recommendedDifficulty
+            )}
+            {" · "}
+            {
+              currentRecommendation.recommendedMinNumber
+            }
+            –
+            {
+              currentRecommendation.recommendedMaxNumber
+            }
+            {" · "}
+            {
+              currentRecommendation.questionCount
+            }{" "}
+            questions
 
-                <p className="teacher-performance-recommendation-summary">
+          </p>
 
-                  {
-                    currentRecommendation.masteryPercent
-                  }
-                  % correct
-                  (includes retries)
+          <p className="teacher-performance-recommendation-reason">
+            {
+              currentRecommendation.reason
+            }
+          </p>
 
-                  {" · "}
+          {currentRecommendation.status ===
+            "approved" && (
+            <div className="teacher-performance-assigned-notice">
 
-                  {
-                    currentRecommendation.questionCount ||
-                    "—"
-                  }{" "}
-                  questions
+              Recommendation approved and
+              assigned to this learner.
 
-                </p>
+            </div>
+          )}
 
-                <p className="teacher-performance-recommendation-reason">
+          {currentRecommendation.status ===
+            "dismissed" && (
+            <div className="teacher-performance-assigned-notice">
 
-                  {currentRecommendation.reason ||
-                    "Practice the recommended topic."}
+              This recommendation was
+              dismissed.
 
-                </p>
+            </div>
+          )}
 
-                {currentRecommendation.assignmentId && (
-                  <div className="teacher-performance-assigned-notice">
-                    Assigned to this
-                    learner. Tap their card
-                    on an available Smart
-                    Board to begin.
+          {/* PREVIEW */}
+
+          <div className="teacher-performance-disclosure">
+
+            <button
+              type="button"
+              onClick={() =>
+                setPreviewOpen(
+                  !previewOpen
+                )
+              }
+            >
+              {previewOpen
+                ? "Hide question preview"
+                : "Preview recommended questions"}
+            </button>
+
+            {previewOpen && (
+              <>
+
+                {currentRecommendation.previewQuestions.length ===
+                  0 && (
+                  <div className="teacher-performance-preview-missing">
+
+                    Question preview is
+                    unavailable.
+
                   </div>
                 )}
 
                 {currentRecommendation.previewQuestions.length >
                   0 && (
-                  <div className="teacher-performance-disclosure">
+                  <div className="teacher-performance-preview-list">
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPreviewOpen(
-                          (
-                            current
-                          ) =>
-                            !current
-                        )
-                      }
-                    >
-                      Preview questions (
-                      {
-                        currentRecommendation.questionCount
-                      }
-                      ){" "}
-                      {previewOpen
-                        ? "⌃"
-                        : "⌄"}
-                    </button>
+                    {currentRecommendation.previewQuestions.map(
+                      (
+                        question
+                      ) => (
+                        <div
+                          key={
+                            question.number
+                          }
+                          className="teacher-performance-preview-question"
+                        >
 
-                    {previewOpen && (
-                      <div className="teacher-performance-preview-list">
+                          <strong>
+                            Question{" "}
+                            {
+                              question.number
+                            }
+                            :{" "}
+                            {
+                              question.prompt
+                            }
+                          </strong>
 
-                        {currentRecommendation.previewQuestions.map(
-                          (
-                            question
-                          ) => (
-                            <div
-                              key={
-                                question.number
-                              }
-                              className="teacher-performance-preview-question"
-                            >
+                          <span>
+                            Answer:{" "}
+                            {
+                              question.correctAnswer
+                            }
+                          </span>
 
-                              <strong>
-                                {
-                                  question.number
-                                }
-                                .{" "}
-                                {
-                                  question.prompt
-                                }
-                              </strong>
-
-                              <span>
-                                Answer:{" "}
-                                {
-                                  question.correctAnswer
-                                }
-                              </span>
-
-                            </div>
-                          )
-                        )}
-
-                      </div>
+                        </div>
+                      )
                     )}
 
                   </div>
                 )}
 
-                {currentRecommendation.status ===
-                  "pending" &&
-                  currentRecommendation.previewQuestions.length ===
-                    0 && (
-                    <div className="teacher-performance-preview-missing">
-                      Preview not ready.
-                      Reopen this page to
-                      retry.
-                    </div>
-                  )}
-
-                <div className="teacher-performance-disclosure">
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setWhyOpen(
-                        (
-                          current
-                        ) =>
-                          !current
-                      )
-                    }
-                  >
-                    Why this
-                    recommendation?{" "}
-                    {whyOpen
-                      ? "⌃"
-                      : "⌄"}
-                  </button>
-
-                  {whyOpen && (
-                    <div className="teacher-performance-evidence">
-
-                      {currentRecommendation.evidence && (
-                        <p>
-                          {
-                            currentRecommendation.evidence
-                          }
-                        </p>
-                      )}
-
-                      <p>
-                        {
-                          currentRecommendation.reason
-                        }
-                      </p>
-
-                    </div>
-                  )}
-
-                </div>
-
-                {currentRecommendation.status ===
-                  "pending" && (
-                  <div className="teacher-performance-review-actions">
-
-                    <button
-                      type="button"
-                      className="teacher-performance-dismiss"
-                      disabled={
-                        reviewing
-                      }
-                      onClick={() => {
-                        void handleReview(
-                          "dismissed"
-                        );
-                      }}
-                    >
-                      {reviewing
-                        ? "Updating..."
-                        : "Dismiss"}
-                    </button>
-
-                    <button
-                      type="button"
-                      className="teacher-performance-approve"
-                      disabled={
-                        reviewing ||
-                        !previewOpen ||
-                        currentRecommendation
-                          .previewQuestions
-                          .length ===
-                          0
-                      }
-                      onClick={() => {
-                        void handleReview(
-                          "approved"
-                        );
-                      }}
-                    >
-                      {reviewing
-                        ? "Updating..."
-                        : "Approve"}
-                    </button>
-
-                  </div>
-                )}
-
-              </section>
+              </>
             )}
 
-            <div className="teacher-performance-section-heading history">
+          </div>
 
-              <h3>
-                Activity History (
-                {
-                  completedAssignments.length
-                }
-                )
-              </h3>
+          {/* WHY */}
 
-            </div>
+          <div className="teacher-performance-disclosure">
 
             <button
               type="button"
-              className="teacher-performance-detailed-results"
               onClick={() =>
-                navigate(
-                  `/teacher/learners/${learnerId}/results`
+                setWhyOpen(
+                  !whyOpen
                 )
               }
             >
-              View detailed session results
+              {whyOpen
+                ? "Hide recommendation evidence"
+                : "Why was this recommended?"}
             </button>
 
-            {completedAssignments.length ===
-              0 && (
-              <section className="teacher-performance-empty-card">
-                No completed activities
-                yet.
-              </section>
-            )}
+            {whyOpen && (
+              <div className="teacher-performance-evidence">
 
-            {completedAssignments.length >
-              0 && (
-              <div className="teacher-performance-history">
+                <p>
+                  {
+                    currentRecommendation.evidence
+                  }
+                </p>
 
-                {completedAssignments.map(
-                  (
-                    assignment
-                  ) => (
-                    <button
-                      key={
-                        assignment.id
-                      }
-                      type="button"
-                      className="teacher-performance-history-card"
-                      onClick={() =>
-                        navigate(
-                          `/teacher/learners/${learnerId}/results?assignmentId=${encodeURIComponent(
-                            assignment.id
-                          )}`
-                        )
-                      }
-                    >
+                <p>
+                  Current mastery:{" "}
+                  {
+                    currentRecommendation.masteryPercent
+                  }
+                  % ·{" "}
+                  {
+                    currentRecommendation.masteryLevel
+                  }
+                </p>
 
-                      <div>
-
-                        <strong>
-                          {assignment.activityTitle ||
-                            "Completed activity"}
-                        </strong>
-
-                        <p>
-                          {
-                            assignment.topic
-                          }
-                          {" · "}
-
-                          {assignment.score !==
-                            null &&
-                          assignment.totalQuestions !==
-                            null
-                            ? `${assignment.score} of ${assignment.totalQuestions} correct`
-                            : "Score unavailable"}
-
-                          {" · "}
-
-                          {assignment.masteryPercent !==
-                          null
-                            ? `${assignment.masteryPercent}% · ${masteryLevel(
-                                assignment.masteryPercent
-                              )}`
-                            : "Mastery unavailable"}
-                        </p>
-
-                      </div>
-
-                      <span>
-                        {formatDate(
-                          assignment.completedAt
-                        )}
-                      </span>
-
-                    </button>
-                  )
-                )}
+                <p>
+                  Current setting:{" "}
+                  {capitalized(
+                    currentRecommendation.currentDifficulty
+                  )}
+                  {" · "}
+                  {
+                    currentRecommendation.currentMinNumber
+                  }
+                  –
+                  {
+                    currentRecommendation.currentMaxNumber
+                  }
+                </p>
 
               </div>
             )}
 
-          </>
-        )}
+          </div>
+
+          {/* REVIEW */}
+
+          {currentRecommendation.status ===
+            "pending" && (
+            <div className="teacher-performance-review-actions">
+
+              <button
+                type="button"
+                className="teacher-performance-dismiss"
+                disabled={
+                  reviewing
+                }
+                onClick={() => {
+                  void handleReview(
+                    "dismissed"
+                  );
+                }}
+              >
+                {reviewing
+                  ? "Processing..."
+                  : "Dismiss"}
+              </button>
+
+              <button
+                type="button"
+                className="teacher-performance-approve"
+                disabled={
+                  reviewing
+                }
+                onClick={() => {
+                  void handleReview(
+                    "approved"
+                  );
+                }}
+              >
+                {reviewing
+                  ? "Processing..."
+                  : "Approve & Assign"}
+              </button>
+
+            </div>
+          )}
+
+        </section>
+      )}
+
+      {/* =====================
+          ACTIVITY HISTORY
+          ===================== */}
+
+      <div className="teacher-performance-section-heading history">
+
+        <h3>
+          Activity History
+        </h3>
+
+        <p>
+          {
+            completedAssignments.length
+          }{" "}
+          completed{" "}
+          {completedAssignments.length ===
+          1
+            ? "activity"
+            : "activities"}
+        </p>
+
+      </div>
+
+      {completedAssignments.length ===
+        0 && (
+        <section className="teacher-performance-empty-card">
+
+          No completed activities yet.
+
+        </section>
+      )}
+
+      {completedAssignments.length >
+        0 && (
+        <div className="teacher-performance-history">
+
+          {completedAssignments.map(
+            (
+              assignment
+            ) => (
+              <button
+                key={
+                  assignment.id
+                }
+                type="button"
+                className="teacher-performance-history-card"
+                onClick={() =>
+                  navigate(
+                    `/teacher/learners/${learnerId}/results?assignmentId=${encodeURIComponent(
+                      assignment.id
+                    )}`
+                  )
+                }
+              >
+
+                <div>
+
+                  <strong>
+                    {assignment.activityTitle ||
+                      "Completed Activity"}
+                  </strong>
+
+                  <p>
+                    {assignment.topic ||
+                      "Topic unavailable"}
+
+                    {assignment.score !==
+                      null &&
+                    assignment.totalQuestions !==
+                      null
+                      ? ` · ${assignment.score} of ${assignment.totalQuestions} correct`
+                      : ""}
+
+                    {assignment.masteryPercent !==
+                    null
+                      ? ` · ${assignment.masteryPercent}% · ${masteryLevel(
+                          assignment.masteryPercent
+                        )}`
+                      : ""}
+                  </p>
+
+                </div>
+
+                <span>
+                  {formatDate(
+                    assignment.completedAt
+                  )}
+                </span>
+
+              </button>
+            )
+          )}
+
+        </div>
+      )}
 
     </TeacherLayout>
   );
