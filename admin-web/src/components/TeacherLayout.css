@@ -15,7 +15,9 @@
     230px minmax(0, 1fr);
 }
 
-/* SIDEBAR */
+/* =========================
+   SIDEBAR
+   ========================= */
 
 .teacher-layout-sidebar {
   min-height: 100vh;
@@ -23,30 +25,84 @@
   display: flex;
   flex-direction: column;
 
-  padding: 28px 20px;
+  box-sizing: border-box;
 
-  background: #ffffff;
+  padding: 28px 20px;
 
   border-right:
     1px solid #d9e5e2;
+
+  background: #ffffff;
 }
 
-/* BRAND */
+/* =========================
+   BRAND
+   ========================= */
 
 .teacher-layout-brand {
+  width: 100%;
+
   display: flex;
   align-items: center;
 
-  gap: 10px;
+  gap: 7px;
 
-  margin-bottom: 42px;
+  margin: 0 0 40px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  font: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.teacher-layout-brand:hover {
+  opacity: 0.88;
+}
+
+.teacher-layout-brand:active {
+  transform:
+    translateY(
+      1px
+    );
 }
 
 .teacher-layout-logo {
-  width: 45px;
-  height: 45px;
+  width: 64px;
+  height: 64px;
+
+  display: block;
+
+  flex: 0 0 auto;
 
   object-fit: contain;
+  object-position: center;
+
+  transform:
+    scale(
+      1.13
+    );
+
+  transform-origin: center;
+}
+
+.teacher-layout-brand-text {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
 }
 
 .teacher-layout-brand h1 {
@@ -54,22 +110,30 @@
 
   color: #102d3c;
 
-  font-size: 20px;
-  font-weight: 750;
+  font-size: 22px;
+  font-weight: 800;
+
+  line-height: 1.04;
+
+  letter-spacing: -0.3px;
 }
 
 .teacher-layout-brand p {
-  margin: 3px 0 0;
+  margin: 6px 0 0;
 
   color: #71838b;
 
-  font-size: 7px;
-  font-weight: 700;
+  font-size: 7.5px;
+  font-weight: 800;
 
-  letter-spacing: 1.7px;
+  letter-spacing: 1.65px;
+
+  white-space: nowrap;
 }
 
-/* NAVIGATION */
+/* =========================
+   NAVIGATION
+   ========================= */
 
 .teacher-layout-nav {
   display: flex;
@@ -117,7 +181,9 @@
   font-weight: 700;
 }
 
-/* LOGOUT */
+/* =========================
+   LOGOUT
+   ========================= */
 
 .teacher-layout-logout {
   margin-top: auto;
@@ -150,27 +216,41 @@
   border-color: #94b8b2;
 }
 
-/* PAGE CONTENT */
+/* =========================
+   PAGE CONTENT
+   ========================= */
 
 .teacher-layout-content {
   width: 100%;
   min-width: 0;
 
+  box-sizing: border-box;
+
   padding: 42px;
 }
 
-/* ACCESSIBILITY */
+/* =========================
+   ACCESSIBILITY
+   ========================= */
 
+.teacher-layout-brand:focus-visible,
 .teacher-layout-nav-item:focus-visible,
 .teacher-layout-logout:focus-visible {
   outline:
     3px solid
-    rgba(0, 125, 114, 0.18);
+    rgba(
+      0,
+      125,
+      114,
+      0.18
+    );
 
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
-/* RESPONSIVE */
+/* =========================
+   RESPONSIVE
+   ========================= */
 
 @media (max-width: 900px) {
   .teacher-layout-container {
@@ -189,5 +269,16 @@
 @media (max-width: 650px) {
   .teacher-layout-content {
     padding: 22px 16px;
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
+  .teacher-layout-brand,
+  .teacher-layout-nav-item,
+  .teacher-layout-logout {
+    transition: none;
   }
 }

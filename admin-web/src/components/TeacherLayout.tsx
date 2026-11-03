@@ -37,74 +37,49 @@ interface TeacherLayoutProps {
 
 interface NavigationItem {
   label: string;
-
   path: string;
 }
 
 const navigationItems:
   NavigationItem[] = [
     {
-      label:
-        "Dashboard",
-
-      path:
-        "/teacher-dashboard",
+      label: "Dashboard",
+      path: "/teacher-dashboard",
     },
 
     {
-      label:
-        "My Learners",
-
-      path:
-        "/teacher/learners",
+      label: "My Learners",
+      path: "/teacher/learners",
     },
 
     {
-      label:
-        "Assign Activity",
-
-      path:
-        "/teacher/assign-activity",
+      label: "Assign Activity",
+      path: "/teacher/assign-activity",
     },
 
     {
-      label:
-        "Activities",
-
-      path:
-        "/teacher/activities",
+      label: "Activities",
+      path: "/teacher/activities",
     },
 
     {
-      label:
-        "Guardian Requests",
-
-      path:
-        "/teacher/guardian-requests",
+      label: "Guardian Requests",
+      path: "/teacher/guardian-requests",
     },
 
     {
-      label:
-        "Smart Boards",
-
-      path:
-        "/teacher/boards",
+      label: "Smart Boards",
+      path: "/teacher/boards",
     },
 
     {
-      label:
-        "Live Sessions",
-
-      path:
-        "/teacher/live-sessions",
+      label: "Live Sessions",
+      path: "/teacher/live-sessions",
     },
 
     {
-      label:
-        "Account",
-
-      path:
-        "/teacher/account",
+      label: "Account",
+      path: "/teacher/account",
     },
   ];
 
@@ -159,17 +134,26 @@ function TeacherLayout({
 
         <aside className="teacher-layout-sidebar">
 
-          <div className="teacher-layout-brand">
+          <button
+            type="button"
+            className="teacher-layout-brand"
+            aria-label="Go to Mathalino teacher dashboard"
+            onClick={() =>
+              navigate(
+                "/teacher-dashboard"
+              )
+            }
+          >
 
             <img
               src={
                 mathalinoLogo
               }
-              alt="Mathalino Logo"
+              alt=""
               className="teacher-layout-logo"
             />
 
-            <div>
+            <div className="teacher-layout-brand-text">
 
               <h1>
                 Mathalino
@@ -181,7 +165,7 @@ function TeacherLayout({
 
             </div>
 
-          </div>
+          </button>
 
           <nav className="teacher-layout-nav">
 

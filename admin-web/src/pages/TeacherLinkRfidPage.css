@@ -170,19 +170,51 @@
 
   margin-top: 17px;
 
-  padding: 0 12px;
+  box-sizing: border-box;
+
+  padding:
+    0
+    44px
+    0
+    12px;
 
   border: 1px solid #cbd9d6;
   border-radius: 11px;
 
   outline: none;
 
-  background: #ffffff;
+  background-color: #ffffff;
 
   color: #153844;
 
   font: inherit;
   font-size: 12px;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23536a72' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+
+  background-position:
+    right 13px center;
+
+  background-size:
+    14px
+    14px;
+
+  cursor: pointer;
+}
+
+.teacher-rfid-card select::-ms-expand {
+  display: none;
+}
+
+.teacher-rfid-card select:hover:not(:disabled) {
+  border-color: #9dbdb7;
 }
 
 .teacher-rfid-card select:focus {
@@ -196,6 +228,14 @@
       114,
       0.1
     );
+}
+
+.teacher-rfid-card select:disabled {
+  background-color: #f5f8f7;
+
+  color: #71838b;
+
+  cursor: not-allowed;
 }
 
 .teacher-rfid-board-selected {

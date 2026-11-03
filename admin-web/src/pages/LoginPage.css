@@ -56,12 +56,12 @@
 
   box-shadow:
     0 24px 65px
-      rgba(
-        30,
-        63,
-        70,
-        0.11
-      );
+    rgba(
+      30,
+      63,
+      70,
+      0.11
+    );
 }
 
 /* =========================
@@ -308,11 +308,6 @@
 
   animation-delay: -4s;
 }
-
-/*
- * Slightly stronger motion than before,
- * but still intentionally subtle.
- */
 
 @keyframes login-float {
   0%,
@@ -618,18 +613,32 @@
   display: flex;
   align-items: center;
 
-  gap: 11px;
+  gap: 7px;
 
-  margin-bottom: 52px;
+  margin-bottom: 44px;
 }
 
 .login-logo {
-  width: 50px;
-  height: 50px;
+  width: 74px;
+  height: 74px;
+
+  display: block;
+
+  flex: 0 0 auto;
 
   object-fit: contain;
+  object-position: center;
 
-  border-radius: 50%;
+  transform:
+    scale(
+      1.16
+    );
+
+  transform-origin: center;
+}
+
+.login-brand-text {
+  min-width: 0;
 }
 
 .login-brand-text h1 {
@@ -637,21 +646,23 @@
 
   color: #102d3c;
 
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 800;
 
-  line-height: 1.1;
+  line-height: 1.05;
+
+  letter-spacing: -0.4px;
 }
 
 .login-brand-text p {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
 
   color: #71838b;
 
-  font-size: 8px;
+  font-size: 8.5px;
   font-weight: 800;
 
-  letter-spacing: 2.2px;
+  letter-spacing: 2.1px;
 }
 
 /* =========================
@@ -1291,6 +1302,15 @@
       44px
       40px;
   }
+
+  .login-logo {
+    width: 68px;
+    height: 68px;
+  }
+
+  .login-brand-text h1 {
+    font-size: 23px;
+  }
 }
 
 /* =========================
@@ -1336,7 +1356,12 @@
   }
 
   .login-brand {
-    margin-bottom: 46px;
+    margin-bottom: 42px;
+  }
+
+  .login-logo {
+    width: 66px;
+    height: 66px;
   }
 
   .login-card {
@@ -1358,7 +1383,16 @@
   }
 
   .login-brand {
-    margin-bottom: 38px;
+    margin-bottom: 36px;
+  }
+
+  .login-logo {
+    width: 62px;
+    height: 62px;
+  }
+
+  .login-brand-text h1 {
+    font-size: 22px;
   }
 
   .login-reset-modal {
