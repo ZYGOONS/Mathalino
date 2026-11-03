@@ -23,6 +23,8 @@ import TeacherLearnerPerformancePage from "./pages/TeacherLearnerPerformancePage
 import TeacherSessionResultsPage from "./pages/TeacherSessionResultsPage";
 import TeacherRecommendationHistoryPage from "./pages/TeacherRecommendationHistoryPage";
 
+import TeacherAssignActivityPage from "./pages/TeacherAssignActivityPage";
+
 import TeacherActivitiesPage from "./pages/TeacherActivitiesPage";
 import TeacherCreateActivityPage from "./pages/TeacherCreateActivityPage";
 import TeacherActivityDetailsPage from "./pages/TeacherActivityDetailsPage";
@@ -215,6 +217,21 @@ function App() {
             allowedRole="teacher"
           >
             <TeacherLearnerDetailsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* =====================
+          ASSIGN ACTIVITY
+          ===================== */}
+
+      <Route
+        path="/teacher/assign-activity"
+        element={
+          <ProtectedRoute
+            allowedRole="teacher"
+          >
+            <TeacherAssignActivityPage />
           </ProtectedRoute>
         }
       />

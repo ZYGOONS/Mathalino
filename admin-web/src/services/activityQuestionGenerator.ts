@@ -1,6 +1,8 @@
 export interface GeneratedQuestion {
   number: number;
+
   prompt: string;
+
   correctAnswer: number;
 
   firstOperand:
@@ -18,20 +20,40 @@ export interface GeneratedQuestion {
 
 export interface QuestionActivity {
   title: string;
+
   topic: string;
+
   difficulty: string;
 
   questionCount: number;
+
   minNumber: number;
+
   maxNumber: number;
 
   savedQuestions:
     GeneratedQuestion[];
 }
 
+export interface TeacherMadeQuestionInput {
+  number: number;
+
+  questionType: string;
+
+  firstOperand:
+    | number
+    | null;
+
+  secondOperand:
+    | number
+    | null;
+}
+
 interface QuestionDraft {
   key: string;
+
   prompt: string;
+
   answer: number;
 
   first:
@@ -47,8 +69,11 @@ interface QuestionDraft {
   type: string;
 }
 
-const SYSTEM_MIN = 0;
-const SYSTEM_MAX = 50;
+const SYSTEM_MIN =
+  0;
+
+const SYSTEM_MAX =
+  50;
 
 const MAX_ATTEMPTS =
   5_000;
@@ -58,7 +83,8 @@ function randomInt(
   max: number
 ): number {
   if (
-    max < min
+    max <
+    min
   ) {
     throw new Error(
       "Invalid random number range."
@@ -81,18 +107,24 @@ function randomItem<T>(
   const index =
     randomInt(
       0,
-      items.length - 1
+      items.length -
+        1
     );
 
-  return items[index];
+  return items[
+    index
+  ];
 }
 
 function addition(
   min: number,
   max: number
-): QuestionDraft | null {
+):
+  | QuestionDraft
+  | null {
   if (
-    min + min >
+    min +
+      min >
     max
   ) {
     return null;
@@ -105,7 +137,8 @@ function addition(
     );
 
   const highestSecond =
-    max - first;
+    max -
+    first;
 
   if (
     highestSecond <
@@ -128,7 +161,8 @@ function addition(
       `${first} + ${second} = ?`,
 
     answer:
-      first + second,
+      first +
+      second,
 
     first,
 
@@ -166,7 +200,8 @@ function subtraction(
       `${first} − ${second} = ?`,
 
     answer:
-      first - second,
+      first -
+      second,
 
     first,
 
@@ -183,12 +218,15 @@ function subtraction(
 function numberSense(
   min: number,
   max: number
-): QuestionDraft | null {
+):
+  | QuestionDraft
+  | null {
   const available:
     string[] = [];
 
   if (
-    min < max
+    min <
+    max
   ) {
     available.push(
       "greater",
@@ -199,7 +237,8 @@ function numberSense(
   }
 
   if (
-    max - min >=
+    max -
+      min >=
     2
   ) {
     available.push(
@@ -238,20 +277,21 @@ function numberSense(
       );
 
     if (
-      first === second
+      first ===
+      second
     ) {
       second =
-        second < max
-          ? second + 1
-          : second - 1;
+        second <
+        max
+          ? second +
+            1
+          : second -
+            1;
     }
 
-    const greater =
-      type ===
-      "greater";
-
     const answer =
-      greater
+      type ===
+      "greater"
         ? Math.max(
             first,
             second
@@ -300,7 +340,8 @@ function numberSense(
     const value =
       randomInt(
         min,
-        max - 1
+        max -
+          1
       );
 
     return {
@@ -311,7 +352,8 @@ function numberSense(
         `What number comes after ${value}?`,
 
       answer:
-        value + 1,
+        value +
+        1,
 
       first:
         value,
@@ -333,7 +375,8 @@ function numberSense(
   ) {
     const value =
       randomInt(
-        min + 1,
+        min +
+          1,
         max
       );
 
@@ -345,7 +388,8 @@ function numberSense(
         `What number comes before ${value}?`,
 
       answer:
-        value - 1,
+        value -
+        1,
 
       first:
         value,
@@ -364,7 +408,8 @@ function numberSense(
   const start =
     randomInt(
       min,
-      max - 2
+      max -
+        2
     );
 
   return {
@@ -375,7 +420,8 @@ function numberSense(
       `What is missing: ${start}, __, ${start + 2}?`,
 
     answer:
-      start + 1,
+      start +
+      1,
 
     first:
       start,
@@ -384,24 +430,107 @@ function numberSense(
       "sequence",
 
     second:
-      start + 2,
+      start +
+      2,
 
     type:
       "missing",
   };
 }
 
-function rebuildSavedQuestion(
+function validateNumberRange(
+  activity:
+    QuestionActivity
+) {
+  if (
+    activity.minNumber <
+      SYSTEM_MIN ||
+    activity.minNumber >
+      SYSTEM_MAX ||
+    activity.maxNumber <
+      SYSTEM_MIN ||
+    activity.maxNumber >
+      SYSTEM_MAX ||
+    activity.minNumber >
+      activity.maxNumber
+  ) {
+    throw new Error(
+      "The activity number range must be between 0 and 50."
+    );
+  }
+}
+
+export function buildTeacherMadeQuestion(
   activity:
     QuestionActivity,
-  original:
-    GeneratedQuestion
+  input:
+    TeacherMadeQuestionInput
 ): GeneratedQuestion {
-  const first =
-    original.firstOperand;
+  validateNumberRange(
+    activity
+  );
+
+  const topic =
+    activity.topic
+      .trim()
+      .toLowerCase();
+
+  let type =
+    input.questionType
+      .trim()
+      .toLowerCase();
 
   if (
-    first === null ||
+    topic ===
+    "addition"
+  ) {
+    type =
+      "addition";
+  }
+
+  if (
+    topic ===
+    "subtraction"
+  ) {
+    type =
+      "subtraction";
+  }
+
+  if (
+    topic ===
+      "number sense" &&
+    ![
+      "greater",
+      "smaller",
+      "after",
+      "before",
+      "missing",
+    ].includes(
+      type
+    )
+  ) {
+    throw new Error(
+      "Select a valid Number Sense question type."
+    );
+  }
+
+  if (
+    topic !==
+      "number sense" &&
+    type !==
+      topic
+  ) {
+    throw new Error(
+      "Question type does not match the activity topic."
+    );
+  }
+
+  const first =
+    input.firstOperand;
+
+  if (
+    first ===
+      null ||
     !Number.isInteger(
       first
     )
@@ -416,59 +545,14 @@ function rebuildSavedQuestion(
       activity.minNumber ||
     first >
       activity.maxNumber ||
-    first < 0 ||
-    first > 50
+    first <
+      SYSTEM_MIN ||
+    first >
+      SYSTEM_MAX
   ) {
     throw new Error(
-      "Number is outside the activity range."
+      `First number must be from ${activity.minNumber} to ${activity.maxNumber}.`
     );
-  }
-
-  const type =
-    original.questionType;
-
-  const topic =
-    activity.topic
-      .trim()
-      .toLowerCase();
-
-  const arithmetic =
-    topic ===
-      "addition" ||
-    topic ===
-      "subtraction";
-
-  if (
-    arithmetic
-  ) {
-    if (
-      type !== topic
-    ) {
-      throw new Error(
-        "Question type does not match the topic."
-      );
-    }
-  } else {
-    const validNumberSense =
-      [
-        "greater",
-        "smaller",
-        "after",
-        "before",
-        "missing",
-      ].includes(
-        type
-      );
-
-    if (
-      topic !==
-        "number sense" ||
-      !validNumberSense
-    ) {
-      throw new Error(
-        "Question type does not match the topic."
-      );
-    }
   }
 
   const needsSecond =
@@ -481,13 +565,14 @@ function rebuildSavedQuestion(
 
   const second =
     needsSecond
-      ? original.secondOperand
+      ? input.secondOperand
       : null;
 
   if (
     needsSecond &&
     (
-      second === null ||
+      second ===
+        null ||
       !Number.isInteger(
         second
       )
@@ -499,204 +584,284 @@ function rebuildSavedQuestion(
   }
 
   if (
-    second !== null &&
+    second !==
+      null &&
     (
       second <
         activity.minNumber ||
       second >
         activity.maxNumber ||
-      second < 0 ||
-      second > 50
+      second <
+        SYSTEM_MIN ||
+      second >
+        SYSTEM_MAX
     )
   ) {
     throw new Error(
-      "Number is outside the activity range."
+      `Second number must be from ${activity.minNumber} to ${activity.maxNumber}.`
     );
   }
 
-  let expected:
-    number;
-
-  switch (
-    type
-  ) {
-    case "addition":
-      expected =
-        first +
-        (
-          second as number
-        );
-      break;
-
-    case "subtraction":
-      expected =
-        first -
-        (
-          second as number
-        );
-      break;
-
-    case "greater":
-      expected =
-        Math.max(
-          first,
-          second as number
-        );
-      break;
-
-    case "smaller":
-      expected =
-        Math.min(
-          first,
-          second as number
-        );
-      break;
-
-    case "after":
-    case "missing":
-      expected =
-        first + 1;
-      break;
-
-    default:
-      expected =
-        first - 1;
-  }
-
-  if (
-    expected < 0 ||
-    expected > 50
-  ) {
-    throw new Error(
-      "Answer must be between 0 and 50."
-    );
-  }
-
-  if (
-    type !==
-      "subtraction" &&
-    (
-      expected <
-        activity.minNumber ||
-      expected >
-        activity.maxNumber
-    )
-  ) {
-    throw new Error(
-      "Answer is outside the activity range."
-    );
-  }
-
-  if (
-    type ===
-      "missing" &&
-    second !==
-      first + 2
-  ) {
-    throw new Error(
-      "The last number must be two more than the first."
-    );
-  }
-
-  if (
-    (
-      type ===
-        "greater" ||
-      type ===
-        "smaller"
-    ) &&
-    first ===
-      second
-  ) {
-    throw new Error(
-      "Choose two different numbers."
-    );
-  }
-
-  if (
-    original.correctAnswer !==
-    expected
-  ) {
-    throw new Error(
-      `The correct answer is ${expected}.`
-    );
-  }
+  let correctAnswer =
+    0;
 
   let operator =
-    type;
-
-  if (
-    type ===
-    "addition"
-  ) {
-    operator =
-      "+";
-  }
-
-  if (
-    type ===
-    "subtraction"
-  ) {
-    operator =
-      "−";
-  }
-
-  if (
-    type ===
-    "missing"
-  ) {
-    operator =
-      "sequence";
-  }
+    "";
 
   let prompt =
     "";
 
+  switch (
+    type
+  ) {
+    case "addition": {
+      correctAnswer =
+        first +
+        (
+          second as number
+        );
+
+      operator =
+        "+";
+
+      prompt =
+        `${first} + ${second} = ?`;
+
+      if (
+        correctAnswer >
+        activity.maxNumber
+      ) {
+        throw new Error(
+          `The answer must not exceed ${activity.maxNumber}.`
+        );
+      }
+
+      break;
+    }
+
+    case "subtraction": {
+      if (
+        (
+          second as number
+        ) >
+        first
+      ) {
+        throw new Error(
+          "For subtraction, the second number cannot be greater than the first number."
+        );
+      }
+
+      correctAnswer =
+        first -
+        (
+          second as number
+        );
+
+      operator =
+        "−";
+
+      prompt =
+        `${first} − ${second} = ?`;
+
+      break;
+    }
+
+    case "greater": {
+      if (
+        first ===
+        second
+      ) {
+        throw new Error(
+          "Choose two different numbers."
+        );
+      }
+
+      correctAnswer =
+        Math.max(
+          first,
+          second as number
+        );
+
+      operator =
+        "greater";
+
+      prompt =
+        `Which number is greater: ${first} or ${second}?`;
+
+      break;
+    }
+
+    case "smaller": {
+      if (
+        first ===
+        second
+      ) {
+        throw new Error(
+          "Choose two different numbers."
+        );
+      }
+
+      correctAnswer =
+        Math.min(
+          first,
+          second as number
+        );
+
+      operator =
+        "smaller";
+
+      prompt =
+        `Which number is smaller: ${first} or ${second}?`;
+
+      break;
+    }
+
+    case "after": {
+      correctAnswer =
+        first +
+        1;
+
+      if (
+        correctAnswer >
+        activity.maxNumber
+      ) {
+        throw new Error(
+          `Choose a number below ${activity.maxNumber}.`
+        );
+      }
+
+      operator =
+        "after";
+
+      prompt =
+        `What number comes after ${first}?`;
+
+      break;
+    }
+
+    case "before": {
+      correctAnswer =
+        first -
+        1;
+
+      if (
+        correctAnswer <
+        activity.minNumber
+      ) {
+        throw new Error(
+          `Choose a number above ${activity.minNumber}.`
+        );
+      }
+
+      operator =
+        "before";
+
+      prompt =
+        `What number comes before ${first}?`;
+
+      break;
+    }
+
+    case "missing": {
+      if (
+        second !==
+        first +
+          2
+      ) {
+        throw new Error(
+          "For a missing-number question, the last number must be two more than the first."
+        );
+      }
+
+      correctAnswer =
+        first +
+        1;
+
+      operator =
+        "sequence";
+
+      prompt =
+        `What is missing: ${first}, __, ${second}?`;
+
+      break;
+    }
+
+    default:
+      throw new Error(
+        "Unsupported question type."
+      );
+  }
+
   if (
-    type ===
-      "addition" ||
-    type ===
-      "subtraction"
+    correctAnswer <
+      SYSTEM_MIN ||
+    correctAnswer >
+      SYSTEM_MAX
   ) {
-    prompt =
-      `${first} ${operator} ${second} = ?`;
-  } else if (
-    type ===
-      "greater" ||
-    type ===
-      "smaller"
-  ) {
-    prompt =
-      `Which number is ${type}: ${first} or ${second}?`;
-  } else if (
-    type ===
-      "after" ||
-    type ===
-      "before"
-  ) {
-    prompt =
-      `What number comes ${type} ${first}?`;
-  } else {
-    prompt =
-      `What is missing: ${first}, __, ${second}?`;
+    throw new Error(
+      "The answer must be between 0 and 50."
+    );
   }
 
   return {
-    ...original,
+    number:
+      input.number,
 
     prompt,
 
-    correctAnswer:
-      expected,
+    correctAnswer,
 
     firstOperand:
       first,
 
+    operator,
+
     secondOperand:
       second,
 
-    operator,
+    questionType:
+      type,
   };
+}
+
+function rebuildSavedQuestion(
+  activity:
+    QuestionActivity,
+  original:
+    GeneratedQuestion
+): GeneratedQuestion {
+  const rebuilt =
+    buildTeacherMadeQuestion(
+      activity,
+      {
+        number:
+          original.number,
+
+        questionType:
+          original.questionType,
+
+        firstOperand:
+          original.firstOperand,
+
+        secondOperand:
+          original.secondOperand,
+      }
+    );
+
+  if (
+    original.prompt !==
+      rebuilt.prompt ||
+    original.correctAnswer !==
+      rebuilt.correctAnswer ||
+    original.operator !==
+      rebuilt.operator
+  ) {
+    throw new Error(
+      "Saved questions no longer match this activity. Regenerate or rebuild the questions first."
+    );
+  }
+
+  return rebuilt;
 }
 
 function sameQuestion(
@@ -729,12 +894,6 @@ export function generateActivityQuestions(
   requestedCount =
     activity.questionCount
 ): GeneratedQuestion[] {
-  /*
-   * =========================
-   * SAVED QUESTIONS
-   * =========================
-   */
-
   if (
     activity.savedQuestions.length >
     0
@@ -749,7 +908,8 @@ export function generateActivityQuestions(
     }
 
     if (
-      requestedCount < 1 ||
+      requestedCount <
+        1 ||
       requestedCount >
         activity.savedQuestions.length
     ) {
@@ -765,10 +925,11 @@ export function generateActivityQuestions(
       ) => {
         if (
           question.number !==
-          index + 1
+          index +
+            1
         ) {
           throw new Error(
-            "Saved questions no longer match this activity. Regenerate and save them first."
+            "Saved questions no longer match this activity."
           );
         }
 
@@ -785,7 +946,7 @@ export function generateActivityQuestions(
           )
         ) {
           throw new Error(
-            "Saved questions no longer match this activity. Regenerate and save them first."
+            "Saved questions no longer match this activity."
           );
         }
       }
@@ -797,32 +958,15 @@ export function generateActivityQuestions(
     );
   }
 
-  /*
-   * =========================
-   * GENERATED QUESTIONS
-   * =========================
-   */
+  validateNumberRange(
+    activity
+  );
 
   if (
-    activity.minNumber <
-      SYSTEM_MIN ||
-    activity.minNumber >
-      SYSTEM_MAX ||
-    activity.maxNumber <
-      SYSTEM_MIN ||
-    activity.maxNumber >
-      SYSTEM_MAX ||
-    activity.minNumber >
-      activity.maxNumber
-  ) {
-    throw new Error(
-      "The activity number range must be between 0 and 50."
-    );
-  }
-
-  if (
-    requestedCount < 1 ||
-    requestedCount > 100
+    requestedCount <
+      1 ||
+    requestedCount >
+      100
   ) {
     throw new Error(
       "Question count must be between 1 and 100."
@@ -895,7 +1039,9 @@ export function generateActivityQuestions(
       );
     }
 
-    if (!draft) {
+    if (
+      !draft
+    ) {
       continue;
     }
 
@@ -933,7 +1079,8 @@ export function generateActivityQuestions(
         index
       ): GeneratedQuestion => ({
         number:
-          index + 1,
+          index +
+          1,
 
         prompt:
           question.prompt,

@@ -37,6 +37,7 @@ interface TeacherLayoutProps {
 
 interface NavigationItem {
   label: string;
+
   path: string;
 }
 
@@ -56,6 +57,14 @@ const navigationItems:
 
       path:
         "/teacher/learners",
+    },
+
+    {
+      label:
+        "Assign Activity",
+
+      path:
+        "/teacher/assign-activity",
     },
 
     {
@@ -108,31 +117,10 @@ function TeacherLayout({
   const location =
     useLocation();
 
-  /*
-   * =========================
-   * BACKGROUND PROCESSORS
-   * =========================
-   */
-
-  /*
-   * RFID card tap
-   * → start activity.
-   */
   useRfidAutoStart();
 
-  /*
-   * Smart Board answer
-   * → grade / advance question.
-   */
   useAnswerSubmissionProcessing();
 
-  /*
-   * Completed session
-   * → assignment result
-   * → mastery
-   * → recommendation
-   * → resultSynced.
-   */
   useResultSynchronization();
 
   const handleLogout =

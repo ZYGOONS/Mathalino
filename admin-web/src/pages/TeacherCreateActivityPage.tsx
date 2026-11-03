@@ -37,6 +37,10 @@ type Difficulty =
   | "average"
   | "difficult";
 
+type QuestionSource =
+  | "generated"
+  | "teacher-made";
+
 interface ActivityForm {
   title: string;
 
@@ -49,6 +53,9 @@ interface ActivityForm {
   difficulty: Difficulty;
 
   questionCount: string;
+
+  questionSource:
+    QuestionSource;
 }
 
 interface FormErrors {
@@ -61,10 +68,13 @@ interface FormErrors {
   difficulty?: string;
 
   questionCount?: string;
+
+  questionSource?: string;
 }
 
 interface DifficultyRange {
   min: number;
+
   max: number;
 }
 
@@ -89,9 +99,12 @@ const DIFFICULTY_RANGES: Record<
 };
 
 function difficultyLabel(
-  difficulty: Difficulty
+  difficulty:
+    Difficulty
 ): string {
-  switch (difficulty) {
+  switch (
+    difficulty
+  ) {
     case "easy":
       return "Easy";
 
@@ -117,16 +130,20 @@ function TeacherCreateActivityPage() {
     loadingAuth,
     setLoadingAuth,
   ] =
-    useState(true);
+    useState(
+      true
+    );
 
   const [
     form,
     setForm,
   ] =
     useState<ActivityForm>({
-      title: "",
+      title:
+        "",
 
-      description: "",
+      description:
+        "",
 
       topic:
         "Number Sense",
@@ -139,6 +156,9 @@ function TeacherCreateActivityPage() {
 
       questionCount:
         "10",
+
+      questionSource:
+        "generated",
     });
 
   const [
@@ -153,55 +173,54 @@ function TeacherCreateActivityPage() {
     saving,
     setSaving,
   ] =
-    useState(false);
+    useState(
+      false
+    );
 
   const [
     error,
     setError,
   ] =
-    useState("");
+    useState(
+      ""
+    );
 
-  /*
-   * =========================
-   * AUTH
-   * =========================
-   */
+  useEffect(
+    () => {
+      const unsubscribe =
+        onAuthStateChanged(
+          auth,
+          (
+            user
+          ) => {
+            if (
+              !user
+            ) {
+              navigate(
+                "/"
+              );
 
-  useEffect(() => {
-    const unsubscribe =
-      onAuthStateChanged(
-        auth,
-        (
-          user
-        ) => {
-          if (!user) {
-            navigate("/");
+              return;
+            }
 
-            return;
+            setTeacherId(
+              user.uid
+            );
+
+            setLoadingAuth(
+              false
+            );
           }
+        );
 
-          setTeacherId(
-            user.uid
-          );
-
-          setLoadingAuth(
-            false
-          );
-        }
-      );
-
-    return () => {
-      unsubscribe();
-    };
-  }, [
-    navigate,
-  ]);
-
-  /*
-   * =========================
-   * RANGE
-   * =========================
-   */
+      return () => {
+        unsubscribe();
+      };
+    },
+    [
+      navigate,
+    ]
+  );
 
   const range =
     useMemo(
@@ -213,12 +232,6 @@ function TeacherCreateActivityPage() {
         form.difficulty,
       ]
     );
-
-  /*
-   * =========================
-   * INPUT
-   * =========================
-   */
 
   const updateField = <
     K extends keyof ActivityForm
@@ -254,12 +267,6 @@ function TeacherCreateActivityPage() {
     );
   };
 
-  /*
-   * =========================
-   * VALIDATION
-   * =========================
-   */
-
   const validate =
     (): boolean => {
       const nextErrors:
@@ -273,7 +280,9 @@ function TeacherCreateActivityPage() {
           form.questionCount
         );
 
-      if (!title) {
+      if (
+        !title
+      ) {
         nextErrors.title =
           "Activity title is required.";
       }
@@ -286,12 +295,16 @@ function TeacherCreateActivityPage() {
           "Activity title must be 100 characters or less.";
       }
 
-      if (!form.topic) {
+      if (
+        !form.topic
+      ) {
         nextErrors.topic =
           "Select a topic.";
       }
 
-      if (!form.grade) {
+      if (
+        !form.grade
+      ) {
         nextErrors.grade =
           "Select a grade.";
       }
@@ -301,6 +314,13 @@ function TeacherCreateActivityPage() {
       ) {
         nextErrors.difficulty =
           "Select a difficulty.";
+      }
+
+      if (
+        !form.questionSource
+      ) {
+        nextErrors.questionSource =
+          "Select a question source.";
       }
 
       if (
@@ -328,12 +348,6 @@ function TeacherCreateActivityPage() {
       );
     };
 
-  /*
-   * =========================
-   * CREATE ACTIVITY
-   * =========================
-   */
-
   const handleCreate =
     async () => {
       if (
@@ -351,7 +365,9 @@ function TeacherCreateActivityPage() {
         user.uid !==
           teacherId
       ) {
-        navigate("/");
+        navigate(
+          "/"
+        );
 
         return;
       }
@@ -370,77 +386,67 @@ function TeacherCreateActivityPage() {
             form.questionCount
           );
 
-        await addDoc(
-          collection(
-            db,
-            "activities"
-          ),
-          {
-            teacherId:
-              user.uid,
+        const activityReference =
+          await addDoc(
+            collection(
+              db,
+              "activities"
+            ),
+            {
+              teacherId:
+                user.uid,
 
-            title:
-              form.title.trim(),
+              title:
+                form.title.trim(),
 
-            description:
-              form.description.trim(),
+              description:
+                form.description.trim(),
 
-            topic:
-              form.topic,
+              topic:
+                form.topic,
 
-            grade:
-              form.grade,
+              grade:
+                form.grade,
 
-            difficulty:
-              form.difficulty,
+              difficulty:
+                form.difficulty,
 
-            minNumber:
-              range.min,
+              minNumber:
+                range.min,
 
-            maxNumber:
-              range.max,
+              maxNumber:
+                range.max,
 
-            questionCount,
+              questionCount,
 
-            /*
-             * Questions are generated
-             * by the Mathalino activity
-             * generator when needed.
-             *
-             * Later, Activity Preview
-             * can save generated
-             * questions here.
-             */
-            savedQuestions:
-              [],
+              questionSource:
+                form.questionSource,
 
-            status:
-              "active",
+              savedQuestions:
+                [],
 
-            /*
-             * Normal teacher-created
-             * activities appear in the
-             * Activity Library.
-             */
-            libraryVisible:
-              true,
+              status:
+                "active",
 
-            trashed:
-              false,
+              libraryVisible:
+                true,
 
-            assignmentRevision:
-              0,
+              trashed:
+                false,
 
-            createdAt:
-              serverTimestamp(),
+              assignmentRevision:
+                0,
 
-            updatedAt:
-              serverTimestamp(),
-          }
-        );
+              createdAt:
+                serverTimestamp(),
+
+              updatedAt:
+                serverTimestamp(),
+            }
+          );
 
         navigate(
-          "/teacher/activities"
+          `/teacher/activities/${activityReference.id}/questions`
         );
       } catch (
         createError
@@ -468,9 +474,11 @@ function TeacherCreateActivityPage() {
   ) {
     return (
       <TeacherLayout>
+
         <div className="teacher-create-activity-loading">
           Loading...
         </div>
+
       </TeacherLayout>
     );
   }
@@ -532,8 +540,6 @@ function TeacherCreateActivityPage() {
 
         <div className="teacher-create-activity-grid">
 
-          {/* TITLE */}
-
           <div className="teacher-create-activity-field full">
 
             <label htmlFor="activity-title">
@@ -573,9 +579,7 @@ function TeacherCreateActivityPage() {
                 </small>
               ) : (
                 <small>
-                  Give the activity a
-                  clear learner-friendly
-                  name.
+                  Give the activity a clear learner-friendly name.
                 </small>
               )}
 
@@ -589,8 +593,6 @@ function TeacherCreateActivityPage() {
             </div>
 
           </div>
-
-          {/* DESCRIPTION */}
 
           <div className="teacher-create-activity-field full">
 
@@ -626,8 +628,7 @@ function TeacherCreateActivityPage() {
             <div className="teacher-create-activity-field-footer">
 
               <small>
-                Briefly describe what
-                learners will practice.
+                Briefly describe what learners will practice.
               </small>
 
               <small>
@@ -640,8 +641,6 @@ function TeacherCreateActivityPage() {
             </div>
 
           </div>
-
-          {/* TOPIC */}
 
           <div className="teacher-create-activity-field">
 
@@ -690,8 +689,6 @@ function TeacherCreateActivityPage() {
 
           </div>
 
-          {/* GRADE */}
-
           <div className="teacher-create-activity-field">
 
             <label htmlFor="activity-grade">
@@ -734,8 +731,6 @@ function TeacherCreateActivityPage() {
 
           </div>
 
-          {/* DIFFICULTY */}
-
           <div className="teacher-create-activity-field">
 
             <label htmlFor="activity-difficulty">
@@ -773,17 +768,7 @@ function TeacherCreateActivityPage() {
               </option>
             </select>
 
-            {errors.difficulty && (
-              <small className="error">
-                {
-                  errors.difficulty
-                }
-              </small>
-            )}
-
           </div>
-
-          {/* QUESTION COUNT */}
 
           <div className="teacher-create-activity-field">
 
@@ -828,7 +813,129 @@ function TeacherCreateActivityPage() {
 
         </div>
 
-        {/* RANGE */}
+        <div className="teacher-create-source-section">
+
+          <div className="teacher-create-source-heading">
+
+            <span>
+              QUESTION SOURCE
+            </span>
+
+            <h3>
+              How should the questions be created?
+            </h3>
+
+            <p>
+              Choose automatic question generation or create the question set yourself.
+            </p>
+
+          </div>
+
+          <div className="teacher-create-source-options">
+
+            <button
+              type="button"
+              className={
+                form.questionSource ===
+                "generated"
+                  ? "teacher-create-source-card active"
+                  : "teacher-create-source-card"
+              }
+              disabled={
+                saving
+              }
+              onClick={() =>
+                updateField(
+                  "questionSource",
+                  "generated"
+                )
+              }
+            >
+
+              <span className="teacher-create-source-icon">
+                ✦
+              </span>
+
+              <div>
+
+                <strong>
+                  Generated
+                </strong>
+
+                <p>
+                  Mathalino automatically creates questions based on the selected topic, difficulty and number range.
+                </p>
+
+              </div>
+
+              <span className="teacher-create-source-check">
+                {
+                  form.questionSource ===
+                  "generated"
+                    ? "✓"
+                    : ""
+                }
+              </span>
+
+            </button>
+
+            <button
+              type="button"
+              className={
+                form.questionSource ===
+                "teacher-made"
+                  ? "teacher-create-source-card active"
+                  : "teacher-create-source-card"
+              }
+              disabled={
+                saving
+              }
+              onClick={() =>
+                updateField(
+                  "questionSource",
+                  "teacher-made"
+                )
+              }
+            >
+
+              <span className="teacher-create-source-icon">
+                ✎
+              </span>
+
+              <div>
+
+                <strong>
+                  Teacher-made
+                </strong>
+
+                <p>
+                  Enter the numbers and question types manually before saving the final activity question set.
+                </p>
+
+              </div>
+
+              <span className="teacher-create-source-check">
+                {
+                  form.questionSource ===
+                  "teacher-made"
+                    ? "✓"
+                    : ""
+                }
+              </span>
+
+            </button>
+
+          </div>
+
+          {errors.questionSource && (
+            <small className="teacher-create-source-error">
+              {
+                errors.questionSource
+              }
+            </small>
+          )}
+
+        </div>
 
         <div className="teacher-create-activity-range">
 
@@ -849,8 +956,7 @@ function TeacherCreateActivityPage() {
             {difficultyLabel(
               form.difficulty
             )}{" "}
-            activities automatically
-            use numbers from{" "}
+            activities use numbers from{" "}
             <strong>
               {range.min}
             </strong>{" "}
@@ -863,8 +969,6 @@ function TeacherCreateActivityPage() {
 
         </div>
 
-        {/* SUMMARY */}
-
         <div className="teacher-create-activity-summary">
 
           <span>
@@ -874,6 +978,7 @@ function TeacherCreateActivityPage() {
           <div className="teacher-create-activity-summary-grid">
 
             <div>
+
               <small>
                 TOPIC
               </small>
@@ -883,9 +988,11 @@ function TeacherCreateActivityPage() {
                   form.topic
                 }
               </strong>
+
             </div>
 
             <div>
+
               <small>
                 GRADE
               </small>
@@ -895,9 +1002,11 @@ function TeacherCreateActivityPage() {
                   form.grade
                 }
               </strong>
+
             </div>
 
             <div>
+
               <small>
                 DIFFICULTY
               </small>
@@ -907,9 +1016,11 @@ function TeacherCreateActivityPage() {
                   form.difficulty
                 )}
               </strong>
+
             </div>
 
             <div>
+
               <small>
                 RANGE
               </small>
@@ -918,9 +1029,11 @@ function TeacherCreateActivityPage() {
                 {range.min}–
                 {range.max}
               </strong>
+
             </div>
 
             <div>
+
               <small>
                 QUESTIONS
               </small>
@@ -929,13 +1042,27 @@ function TeacherCreateActivityPage() {
                 {form.questionCount ||
                   "—"}
               </strong>
+
+            </div>
+
+            <div>
+
+              <small>
+                SOURCE
+              </small>
+
+              <strong>
+                {form.questionSource ===
+                "generated"
+                  ? "Generated"
+                  : "Teacher-made"}
+              </strong>
+
             </div>
 
           </div>
 
         </div>
-
-        {/* ACTIONS */}
 
         <div className="teacher-create-activity-actions">
 
@@ -966,7 +1093,7 @@ function TeacherCreateActivityPage() {
           >
             {saving
               ? "Creating..."
-              : "Create Activity"}
+              : "Continue to Questions"}
           </button>
 
         </div>

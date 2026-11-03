@@ -1,0 +1,806 @@
+.teacher-register-modal {
+  width: min(
+    1020px,
+    calc(100vw - 48px)
+  );
+
+  max-height:
+    calc(
+      100vh - 48px
+    );
+
+  box-sizing: border-box;
+
+  overflow-y: auto;
+
+  border:
+    1px solid
+    #d8e3e0;
+
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 70px
+    rgba(
+      15,
+      45,
+      60,
+      0.2
+    );
+}
+
+/* =========================
+   HEADER
+   ========================= */
+
+.teacher-register-header {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  padding:
+    28px
+    32px;
+
+  border-bottom:
+    1px solid
+    #e4ebe9;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f6fbfa,
+      #ffffff
+    );
+}
+
+.teacher-register-header-icon {
+  width: 50px;
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  border-radius: 14px;
+
+  background: #e5f4f1;
+
+  color: #007d72;
+}
+
+.teacher-register-header-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.teacher-register-header-text {
+  min-width: 0;
+}
+
+.teacher-register-eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #007d72;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.teacher-register-header h2 {
+  margin: 0;
+
+  color: #102d3c;
+
+  font-size: 24px;
+  font-weight: 800;
+
+  line-height: 1.2;
+}
+
+.teacher-register-header p {
+  margin:
+    6px
+    0
+    0;
+
+  color: #61777f;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+.teacher-register-close {
+  position: absolute;
+
+  top: 24px;
+  right: 26px;
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #eef4f2;
+
+  color: #536a72;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.teacher-register-close:hover {
+  background: #e0ebe8;
+
+  color: #153844;
+}
+
+.teacher-register-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* =========================
+   FORM
+   ========================= */
+
+.teacher-register-form {
+  padding:
+    28px
+    32px
+    30px;
+}
+
+.teacher-register-columns {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 24px;
+}
+
+/* =========================
+   SECTION
+   ========================= */
+
+.teacher-register-section {
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  padding: 22px;
+
+  border:
+    1px solid
+    #dce7e4;
+
+  border-radius: 16px;
+
+  background: #fbfdfc;
+}
+
+.teacher-register-section-heading {
+  margin-bottom: 20px;
+}
+
+.teacher-register-section-heading span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #007d72;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.3px;
+}
+
+.teacher-register-section-heading h3 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.teacher-register-section-heading p {
+  margin:
+    5px
+    0
+    0;
+
+  color: #637a82;
+
+  font-size: 11px;
+
+  line-height: 1.45;
+}
+
+/* =========================
+   FIELDS
+   ========================= */
+
+.teacher-register-field-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 16px;
+}
+
+.teacher-register-field {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.teacher-register-field.full {
+  grid-column:
+    1 / -1;
+}
+
+.teacher-register-field label {
+  color: #29434d;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.teacher-register-optional {
+  color: #70858c;
+
+  font-weight: 500;
+}
+
+/* =========================
+   INPUT
+   ========================= */
+
+.teacher-register-input-wrapper {
+  position: relative;
+
+  min-width: 0;
+}
+
+.teacher-register-input-wrapper input,
+.teacher-register-field select {
+  width: 100%;
+  height: 46px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid
+    #bed0cc;
+
+  border-radius: 11px;
+
+  outline: none;
+
+  background-color: #ffffff;
+
+  color: #153844;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.teacher-register-input-wrapper input {
+  min-width: 0;
+
+  padding:
+    0
+    14px;
+}
+
+.teacher-register-input-wrapper input.has-icon {
+  padding-left: 43px;
+}
+
+.teacher-register-input-wrapper input.has-action {
+  padding-right: 46px;
+}
+
+/* =========================
+   PLACEHOLDER READABILITY
+   ========================= */
+
+.teacher-register-input-wrapper input::placeholder {
+  color: #6f838a;
+
+  opacity: 1;
+
+  font-weight: 500;
+}
+
+.teacher-register-input-wrapper input::-webkit-input-placeholder {
+  color: #6f838a;
+
+  opacity: 1;
+}
+
+.teacher-register-input-wrapper input::-moz-placeholder {
+  color: #6f838a;
+
+  opacity: 1;
+}
+
+.teacher-register-input-wrapper input:-ms-input-placeholder {
+  color: #6f838a;
+
+  opacity: 1;
+}
+
+/* =========================
+   INPUT HOVER / FOCUS
+   ========================= */
+
+.teacher-register-input-wrapper input:hover,
+.teacher-register-field select:hover {
+  border-color: #91b5ae;
+}
+
+.teacher-register-input-wrapper input:focus,
+.teacher-register-field select:focus {
+  border-color: #007d72;
+
+  box-shadow:
+    0
+    0
+    0
+    3px
+    rgba(
+      0,
+      125,
+      114,
+      0.09
+    );
+
+  background: #ffffff;
+}
+
+/* =========================
+   CUSTOM DROPDOWNS
+   ========================= */
+
+.teacher-register-field select {
+  padding:
+    0
+    44px
+    0
+    14px;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent 50%,
+      #48646d 50%
+    ),
+    linear-gradient(
+      135deg,
+      #48646d 50%,
+      transparent 50%
+    );
+
+  background-position:
+    calc(100% - 19px) 20px,
+    calc(100% - 14px) 20px;
+
+  background-size:
+    5px 5px,
+    5px 5px;
+
+  background-repeat: no-repeat;
+
+  cursor: pointer;
+}
+
+.teacher-register-field select:disabled {
+  cursor: not-allowed;
+}
+
+/* =========================
+   INPUT ICON
+   ========================= */
+
+.teacher-register-input-icon {
+  position: absolute;
+
+  top: 50%;
+  left: 14px;
+
+  width: 18px;
+  height: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #687f87;
+
+  pointer-events: none;
+
+  transform:
+    translateY(
+      -50%
+    );
+}
+
+.teacher-register-input-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* =========================
+   PASSWORD
+   ========================= */
+
+.teacher-register-password-toggle {
+  position: absolute;
+
+  top: 50%;
+  right: 8px;
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  border-radius: 50%;
+
+  background: transparent;
+
+  color: #5e7780;
+
+  cursor: pointer;
+
+  transform:
+    translateY(
+      -50%
+    );
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.teacher-register-password-toggle:hover {
+  background: #eaf3f1;
+
+  color: #007d72;
+}
+
+.teacher-register-password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* =========================
+   DISABLED
+   ========================= */
+
+.teacher-register-input-wrapper input:disabled,
+.teacher-register-field select:disabled {
+  background: #f4f7f6;
+
+  color: #536a72;
+
+  opacity: 1;
+}
+
+/* =========================
+   MESSAGE
+   ========================= */
+
+.teacher-register-message {
+  margin-top: 18px;
+
+  padding:
+    12px
+    14px;
+
+  border-radius: 10px;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+.teacher-register-message.error {
+  border:
+    1px solid
+    #efc4c0;
+
+  background: #fff4f3;
+
+  color: #922f29;
+}
+
+.teacher-register-message.success {
+  border:
+    1px solid
+    #b9ded1;
+
+  background: #eff9f5;
+
+  color: #19664d;
+}
+
+/* =========================
+   ACTIONS
+   ========================= */
+
+.teacher-register-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 24px;
+
+  padding-top: 22px;
+
+  border-top:
+    1px solid
+    #e6edeb;
+}
+
+.teacher-register-cancel,
+.teacher-register-submit {
+  min-height: 42px;
+
+  padding:
+    0
+    19px;
+
+  border-radius: 21px;
+
+  font-family: inherit;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.teacher-register-cancel {
+  border:
+    1px solid
+    #bdcfcb;
+
+  background: #ffffff;
+
+  color: #53666b;
+}
+
+.teacher-register-cancel:hover:not(:disabled) {
+  background: #f4f8f7;
+
+  border-color: #9dbbb5;
+}
+
+.teacher-register-submit {
+  min-width: 150px;
+
+  border:
+    1px solid
+    #007d72;
+
+  background: #007d72;
+
+  color: #ffffff;
+}
+
+.teacher-register-submit:hover:not(:disabled) {
+  background: #006c63;
+
+  border-color: #006c63;
+}
+
+.teacher-register-submit:disabled,
+.teacher-register-cancel:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+}
+
+/* =========================
+   SUCCESS
+   ========================= */
+
+.teacher-register-success {
+  padding:
+    42px
+    32px;
+
+  text-align: center;
+}
+
+.teacher-register-success-icon {
+  width: 56px;
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin:
+    0
+    auto
+    16px;
+
+  border-radius: 50%;
+
+  background: #e5f5ee;
+
+  color: #087252;
+
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.teacher-register-success h3 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 21px;
+}
+
+.teacher-register-success p {
+  max-width: 500px;
+
+  margin:
+    9px
+    auto
+    22px;
+
+  color: #61777f;
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (
+  max-width: 850px
+) {
+  .teacher-register-modal {
+    width:
+      calc(
+        100vw - 30px
+      );
+  }
+
+  .teacher-register-columns {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+@media (
+  max-width: 600px
+) {
+  .teacher-register-modal {
+    width:
+      calc(
+        100vw - 20px
+      );
+
+    max-height:
+      calc(
+        100vh - 20px
+      );
+
+    border-radius: 17px;
+  }
+
+  .teacher-register-header {
+    padding:
+      22px
+      20px;
+
+    padding-right: 62px;
+  }
+
+  .teacher-register-header h2 {
+    font-size: 21px;
+  }
+
+  .teacher-register-form {
+    padding: 20px;
+  }
+
+  .teacher-register-close {
+    top: 18px;
+    right: 18px;
+  }
+
+  .teacher-register-field-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .teacher-register-section {
+    padding: 18px;
+  }
+
+  .teacher-register-field.full {
+    grid-column: auto;
+  }
+
+  .teacher-register-actions {
+    flex-direction:
+      column-reverse;
+  }
+
+  .teacher-register-cancel,
+  .teacher-register-submit {
+    width: 100%;
+  }
+}

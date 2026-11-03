@@ -15,7 +15,6 @@ import {
 import {
   doc,
   onSnapshot,
-  type Timestamp,
 } from "firebase/firestore";
 
 import {
@@ -55,19 +54,7 @@ interface Activity {
 
   status: string;
 
-  libraryVisible: boolean;
-
   trashed: boolean;
-
-  assignmentRevision: number;
-
-  createdAt:
-    | Timestamp
-    | null;
-
-  updatedAt:
-    | Timestamp
-    | null;
 }
 
 function difficultyLabel(
@@ -107,37 +94,6 @@ function statusLabel(
       return status ||
         "Unknown";
   }
-}
-
-function formatDate(
-  timestamp:
-    Timestamp | null
-): string {
-  if (!timestamp) {
-    return "Not recorded";
-  }
-
-  return timestamp
-    .toDate()
-    .toLocaleString(
-      "en-US",
-      {
-        month:
-          "short",
-
-        day:
-          "numeric",
-
-        year:
-          "numeric",
-
-        hour:
-          "numeric",
-
-        minute:
-          "2-digit",
-      }
-    );
 }
 
 function TeacherActivityDetailsPage() {
@@ -324,27 +280,9 @@ function TeacherActivityDetailsPage() {
                     data.status ??
                     "active",
 
-                  libraryVisible:
-                    data.libraryVisible !==
-                    false,
-
                   trashed:
                     data.trashed ===
                     true,
-
-                  assignmentRevision:
-                    Number(
-                      data.assignmentRevision ??
-                        0
-                    ),
-
-                  createdAt:
-                    data.createdAt ??
-                    null,
-
-                  updatedAt:
-                    data.updatedAt ??
-                    null,
                 });
 
                 setError(
@@ -433,11 +371,6 @@ function TeacherActivityDetailsPage() {
           trash
         );
 
-        /*
-         * Android returns the teacher to
-         * the library after moving an
-         * activity to Trash.
-         */
         if (trash) {
           navigate(
             "/teacher/activities"
@@ -726,100 +659,6 @@ function TeacherActivityDetailsPage() {
                 set used by this
                 activity.
               </p>
-
-            </section>
-
-            {/* SYSTEM */}
-
-            <section className="teacher-activity-details-card">
-
-              <div className="teacher-activity-details-section-heading">
-
-                <span>
-                  ACTIVITY RECORD
-                </span>
-
-                <h3>
-                  System Information
-                </h3>
-
-              </div>
-
-              <div className="teacher-activity-system-grid">
-
-                <div>
-                  <span>
-                    STATUS
-                  </span>
-
-                  <strong>
-                    {statusLabel(
-                      activity.status
-                    )}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    LIBRARY
-                  </span>
-
-                  <strong>
-                    {activity.libraryVisible
-                      ? "Visible"
-                      : "Hidden"}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    TRASH
-                  </span>
-
-                  <strong>
-                    {activity.trashed
-                      ? "In Trash"
-                      : "No"}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    ASSIGNMENT REVISION
-                  </span>
-
-                  <strong>
-                    {
-                      activity.assignmentRevision
-                    }
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    CREATED
-                  </span>
-
-                  <strong>
-                    {formatDate(
-                      activity.createdAt
-                    )}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    LAST UPDATED
-                  </span>
-
-                  <strong>
-                    {formatDate(
-                      activity.updatedAt
-                    )}
-                  </strong>
-                </div>
-
-              </div>
 
             </section>
 

@@ -51,10 +51,6 @@
   font-size: 14px;
 }
 
-/* =========================
-   CARD
-   ========================= */
-
 .teacher-create-activity-card {
   width: 100%;
 
@@ -94,10 +90,6 @@
 
   font-size: 18px;
 }
-
-/* =========================
-   FORM
-   ========================= */
 
 .teacher-create-activity-grid {
   display: grid;
@@ -144,14 +136,10 @@
 
   background: #eef3f2;
 
-  color: #879598;
+  color: #71848a;
 
   font-size: 7px;
 }
-
-/* =========================
-   INPUT / TEXTAREA
-   ========================= */
 
 .teacher-create-activity-field input,
 .teacher-create-activity-field textarea,
@@ -176,9 +164,7 @@
 .teacher-create-activity-field input {
   height: 44px;
 
-  padding:
-    0
-    13px;
+  padding: 0 13px;
 }
 
 .teacher-create-activity-field textarea {
@@ -188,10 +174,6 @@
 
   resize: vertical;
 }
-
-/* =========================
-   SELECT DROPDOWNS
-   ========================= */
 
 .teacher-create-activity-field select {
   height: 44px;
@@ -207,28 +189,25 @@
   -moz-appearance: none;
 
   background-image:
-    linear-gradient(
-      45deg,
-      transparent 50%,
-      #153844 50%
-    ),
-    linear-gradient(
-      135deg,
-      #153844 50%,
-      transparent 50%
-    );
-
-  background-position:
-    calc(100% - 19px) 19px,
-    calc(100% - 14px) 19px;
-
-  background-size:
-    5px 5px,
-    5px 5px;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23536a72' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
   background-repeat: no-repeat;
 
+  background-position:
+    right 13px center;
+
+  background-size:
+    14px
+    14px;
+
   cursor: pointer;
+}
+
+.teacher-create-activity-field input::placeholder,
+.teacher-create-activity-field textarea::placeholder {
+  color: #71838b;
+
+  opacity: 1;
 }
 
 .teacher-create-activity-field select:hover {
@@ -259,7 +238,7 @@
 }
 
 .teacher-create-activity-field small {
-  color: #819095;
+  color: #71838b;
 
   font-size: 9px;
 }
@@ -273,6 +252,203 @@
   justify-content: space-between;
 
   gap: 12px;
+}
+
+/* =========================
+   QUESTION SOURCE
+   ========================= */
+
+.teacher-create-source-section {
+  margin-top: 24px;
+
+  padding-top: 23px;
+
+  border-top: 1px solid #e4ecea;
+}
+
+.teacher-create-source-heading {
+  margin-bottom: 15px;
+}
+
+.teacher-create-source-heading > span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #007d72;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 1.2px;
+}
+
+.teacher-create-source-heading h3 {
+  margin: 0;
+
+  color: #153844;
+
+  font-size: 17px;
+}
+
+.teacher-create-source-heading p {
+  margin:
+    6px
+    0
+    0;
+
+  color: #657b82;
+
+  font-size: 11px;
+}
+
+.teacher-create-source-options {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 13px;
+}
+
+.teacher-create-source-card {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    40px
+    minmax(0, 1fr)
+    24px;
+
+  align-items: flex-start;
+
+  gap: 13px;
+
+  padding: 17px;
+
+  border:
+    1px solid
+    #d2dfdc;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  text-align: left;
+
+  font: inherit;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.teacher-create-source-card:hover:not(:disabled) {
+  border-color: #8fbdb4;
+
+  background: #fbfdfc;
+}
+
+.teacher-create-source-card.active {
+  border-color: #007d72;
+
+  background: #eff8f5;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(
+      0,
+      125,
+      114,
+      0.07
+    );
+}
+
+.teacher-create-source-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  background: #e3f3ef;
+
+  color: #007d72;
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.teacher-create-source-card strong {
+  display: block;
+
+  margin-top: 1px;
+
+  color: #153844;
+
+  font-size: 12px;
+}
+
+.teacher-create-source-card p {
+  margin:
+    5px
+    0
+    0;
+
+  color: #637980;
+
+  font-size: 10px;
+
+  line-height: 1.5;
+}
+
+.teacher-create-source-check {
+  width: 21px;
+  height: 21px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px solid
+    #b9ccc8;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.teacher-create-source-card.active
+  .teacher-create-source-check {
+  border-color: #007d72;
+
+  background: #007d72;
+}
+
+.teacher-create-source-error {
+  display: block;
+
+  margin-top: 8px;
+
+  color: #9b3d36;
+
+  font-size: 9px;
 }
 
 /* =========================
@@ -365,7 +541,7 @@
 
   grid-template-columns:
     repeat(
-      5,
+      6,
       minmax(0, 1fr)
     );
 
@@ -381,7 +557,7 @@
 
   margin-bottom: 4px;
 
-  color: #889699;
+  color: #7b8c91;
 
   font-size: 8px;
   font-weight: 700;
@@ -422,9 +598,7 @@
 .teacher-create-activity-save {
   min-height: 40px;
 
-  padding:
-    0
-    19px;
+  padding: 0 19px;
 
   border-radius: 20px;
 
@@ -460,15 +634,12 @@
 }
 
 .teacher-create-activity-cancel:disabled,
-.teacher-create-activity-save:disabled {
+.teacher-create-activity-save:disabled,
+.teacher-create-source-card:disabled {
   opacity: 0.55;
 
   cursor: not-allowed;
 }
-
-/* =========================
-   STATES
-   ========================= */
 
 .teacher-create-activity-error {
   max-width: 930px;
@@ -477,9 +648,7 @@
 
   margin-bottom: 18px;
 
-  padding:
-    11px
-    14px;
+  padding: 11px 14px;
 
   border: 1px solid #efc4c0;
   border-radius: 10px;
@@ -499,12 +668,9 @@
   text-align: center;
 }
 
-/* =========================
-   RESPONSIVE
-   ========================= */
-
 @media (max-width: 760px) {
-  .teacher-create-activity-grid {
+  .teacher-create-activity-grid,
+  .teacher-create-source-options {
     grid-template-columns: 1fr;
   }
 
@@ -547,11 +713,5 @@
   .teacher-create-activity-cancel,
   .teacher-create-activity-save {
     width: 100%;
-  }
-
-  .teacher-create-activity-field select {
-    background-position:
-      calc(100% - 19px) 19px,
-      calc(100% - 14px) 19px;
   }
 }

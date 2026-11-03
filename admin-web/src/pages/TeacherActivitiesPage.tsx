@@ -886,7 +886,7 @@ function TeacherActivitiesPage() {
                             )
                           }
                         >
-                          Manage
+                          Preview
                         </button>
 
                         <button

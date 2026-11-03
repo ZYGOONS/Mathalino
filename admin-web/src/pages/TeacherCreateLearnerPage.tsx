@@ -14,7 +14,9 @@ import {
 import {
   addDoc,
   collection,
+  doc,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 
 import {
@@ -44,6 +46,229 @@ interface FormErrors {
   section?: string;
 
   age?: string;
+}
+
+interface CsvLearnerRow {
+  rowNumber: number;
+
+  firstName: string;
+  lastName: string;
+
+  grade: string;
+  section: string;
+
+  age: string;
+
+  errors: string[];
+}
+
+/* =========================
+   CSV
+   ========================= */
+
+function normalizeHeader(
+  value: string
+): string {
+  return value
+    .replace(/^\uFEFF/, "")
+    .trim()
+    .toLowerCase()
+    .replace(
+      /[^a-z0-9]/g,
+      ""
+    );
+}
+
+function parseCsv(
+  text: string
+): string[][] {
+  const rows:
+    string[][] = [];
+
+  let row:
+    string[] = [];
+
+  let field = "";
+
+  let insideQuotes =
+    false;
+
+  for (
+    let index = 0;
+    index < text.length;
+    index += 1
+  ) {
+    const character =
+      text[index];
+
+    const nextCharacter =
+      text[index + 1];
+
+    if (
+      character ===
+      '"'
+    ) {
+      if (
+        insideQuotes &&
+        nextCharacter ===
+          '"'
+      ) {
+        field += '"';
+
+        index += 1;
+      } else {
+        insideQuotes =
+          !insideQuotes;
+      }
+
+      continue;
+    }
+
+    if (
+      character ===
+        "," &&
+      !insideQuotes
+    ) {
+      row.push(
+        field.trim()
+      );
+
+      field = "";
+
+      continue;
+    }
+
+    if (
+      (
+        character ===
+          "\n" ||
+        character ===
+          "\r"
+      ) &&
+      !insideQuotes
+    ) {
+      if (
+        character ===
+          "\r" &&
+        nextCharacter ===
+          "\n"
+      ) {
+        index += 1;
+      }
+
+      row.push(
+        field.trim()
+      );
+
+      const containsData =
+        row.some(
+          (
+            value
+          ) =>
+            value.trim() !==
+            ""
+        );
+
+      if (
+        containsData
+      ) {
+        rows.push(
+          row
+        );
+      }
+
+      row = [];
+
+      field = "";
+
+      continue;
+    }
+
+    field +=
+      character;
+  }
+
+  row.push(
+    field.trim()
+  );
+
+  if (
+    row.some(
+      (
+        value
+      ) =>
+        value.trim() !==
+        ""
+    )
+  ) {
+    rows.push(
+      row
+    );
+  }
+
+  return rows;
+}
+
+function validateCsvRow(
+  row:
+    Omit<
+      CsvLearnerRow,
+      "errors"
+    >
+): string[] {
+  const errors:
+    string[] = [];
+
+  if (
+    !row.firstName.trim()
+  ) {
+    errors.push(
+      "First name required"
+    );
+  }
+
+  if (
+    !row.lastName.trim()
+  ) {
+    errors.push(
+      "Last name required"
+    );
+  }
+
+  if (
+    !row.grade.trim()
+  ) {
+    errors.push(
+      "Grade required"
+    );
+  }
+
+  if (
+    !row.section.trim()
+  ) {
+    errors.push(
+      "Section required"
+    );
+  }
+
+  const age =
+    Number(
+      row.age
+    );
+
+  if (
+    !Number.isInteger(
+      age
+    ) ||
+    age < 3 ||
+    age > 25
+  ) {
+    errors.push(
+      "Age must be 3–25"
+    );
+  }
+
+  return errors;
 }
 
 function TeacherCreateLearnerPage() {
@@ -96,11 +321,53 @@ function TeacherCreateLearnerPage() {
   ] =
     useState("");
 
-  /*
-   * =========================
-   * AUTH
-   * =========================
-   */
+  /* =========================
+     CSV STATE
+     ========================= */
+
+  const [
+    importOpen,
+    setImportOpen,
+  ] =
+    useState(false);
+
+  const [
+    csvRows,
+    setCsvRows,
+  ] =
+    useState<
+      CsvLearnerRow[]
+    >(
+      []
+    );
+
+  const [
+    csvFileName,
+    setCsvFileName,
+  ] =
+    useState("");
+
+  const [
+    csvError,
+    setCsvError,
+  ] =
+    useState("");
+
+  const [
+    importing,
+    setImporting,
+  ] =
+    useState(false);
+
+  const [
+    importSuccess,
+    setImportSuccess,
+  ] =
+    useState("");
+
+  /* =========================
+     AUTH
+     ========================= */
 
   useEffect(() => {
     const unsubscribe =
@@ -132,11 +399,9 @@ function TeacherCreateLearnerPage() {
     navigate,
   ]);
 
-  /*
-   * =========================
-   * INPUT
-   * =========================
-   */
+  /* =========================
+     INPUT
+     ========================= */
 
   const handleChange = (
     field:
@@ -170,11 +435,9 @@ function TeacherCreateLearnerPage() {
     );
   };
 
-  /*
-   * =========================
-   * VALIDATION
-   * =========================
-   */
+  /* =========================
+     VALIDATION
+     ========================= */
 
   const validate =
     (): boolean => {
@@ -241,11 +504,9 @@ function TeacherCreateLearnerPage() {
       );
     };
 
-  /*
-   * =========================
-   * SAVE
-   * =========================
-   */
+  /* =========================
+     SAVE SINGLE LEARNER
+     ========================= */
 
   const handleSave =
     async () => {
@@ -345,11 +606,585 @@ function TeacherCreateLearnerPage() {
       }
     };
 
-  /*
-   * =========================
-   * LOADING
-   * =========================
-   */
+  /* =========================
+     CSV TEMPLATE
+     ========================= */
+
+  const handleDownloadTemplate =
+    () => {
+      const template = [
+        "firstName,lastName,grade,section,age",
+        "Juan,Dela Cruz,1,A,7",
+        "Maria,Santos,2,B,8",
+      ].join(
+        "\n"
+      );
+
+      const blob =
+        new Blob(
+          [
+            template,
+          ],
+          {
+            type:
+              "text/csv;charset=utf-8",
+          }
+        );
+
+      const url =
+        URL.createObjectURL(
+          blob
+        );
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+      link.href =
+        url;
+
+      link.download =
+        "mathalino-learner-import-template.csv";
+
+      document.body.appendChild(
+        link
+      );
+
+      link.click();
+
+      link.remove();
+
+      URL.revokeObjectURL(
+        url
+      );
+    };
+
+  /* =========================
+     CSV OPEN / CLOSE
+     ========================= */
+
+  const openImport =
+    () => {
+      setCsvRows(
+        []
+      );
+
+      setCsvFileName(
+        ""
+      );
+
+      setCsvError(
+        ""
+      );
+
+      setImportSuccess(
+        ""
+      );
+
+      setImportOpen(
+        true
+      );
+    };
+
+  const closeImport =
+    () => {
+      if (
+        importing
+      ) {
+        return;
+      }
+
+      setImportOpen(
+        false
+      );
+
+      setCsvRows(
+        []
+      );
+
+      setCsvFileName(
+        ""
+      );
+
+      setCsvError(
+        ""
+      );
+
+      setImportSuccess(
+        ""
+      );
+    };
+
+  /* =========================
+     READ CSV
+     ========================= */
+
+  const handleCsvFile =
+    async (
+      file:
+        File | null
+    ) => {
+      setCsvRows(
+        []
+      );
+
+      setCsvError(
+        ""
+      );
+
+      setImportSuccess(
+        ""
+      );
+
+      setCsvFileName(
+        file?.name ??
+          ""
+      );
+
+      if (!file) {
+        return;
+      }
+
+      if (
+        !file.name
+          .toLowerCase()
+          .endsWith(
+            ".csv"
+          )
+      ) {
+        setCsvError(
+          "Select a CSV file."
+        );
+
+        return;
+      }
+
+      if (
+        file.size >
+        1024 *
+          1024
+      ) {
+        setCsvError(
+          "CSV file must be 1 MB or smaller."
+        );
+
+        return;
+      }
+
+      try {
+        const text =
+          await file.text();
+
+        const parsed =
+          parseCsv(
+            text
+          );
+
+        if (
+          parsed.length <
+          2
+        ) {
+          setCsvError(
+            "The CSV does not contain any learner records."
+          );
+
+          return;
+        }
+
+        const header =
+          parsed[0].map(
+            normalizeHeader
+          );
+
+        const requiredHeaders = {
+          firstName:
+            "firstname",
+
+          lastName:
+            "lastname",
+
+          grade:
+            "grade",
+
+          section:
+            "section",
+
+          age:
+            "age",
+        };
+
+        const firstNameIndex =
+          header.indexOf(
+            requiredHeaders.firstName
+          );
+
+        const lastNameIndex =
+          header.indexOf(
+            requiredHeaders.lastName
+          );
+
+        const gradeIndex =
+          header.indexOf(
+            requiredHeaders.grade
+          );
+
+        const sectionIndex =
+          header.indexOf(
+            requiredHeaders.section
+          );
+
+        const ageIndex =
+          header.indexOf(
+            requiredHeaders.age
+          );
+
+        const missing:
+          string[] = [];
+
+        if (
+          firstNameIndex ===
+          -1
+        ) {
+          missing.push(
+            "firstName"
+          );
+        }
+
+        if (
+          lastNameIndex ===
+          -1
+        ) {
+          missing.push(
+            "lastName"
+          );
+        }
+
+        if (
+          gradeIndex ===
+          -1
+        ) {
+          missing.push(
+            "grade"
+          );
+        }
+
+        if (
+          sectionIndex ===
+          -1
+        ) {
+          missing.push(
+            "section"
+          );
+        }
+
+        if (
+          ageIndex ===
+          -1
+        ) {
+          missing.push(
+            "age"
+          );
+        }
+
+        if (
+          missing.length >
+          0
+        ) {
+          setCsvError(
+            `Missing required column${
+              missing.length >
+              1
+                ? "s"
+                : ""
+            }: ${missing.join(
+              ", "
+            )}.`
+          );
+
+          return;
+        }
+
+        const dataRows =
+          parsed
+            .slice(
+              1
+            )
+            .filter(
+              (
+                values
+              ) =>
+                values.some(
+                  (
+                    value
+                  ) =>
+                    value.trim() !==
+                    ""
+                )
+            );
+
+        if (
+          dataRows.length ===
+          0
+        ) {
+          setCsvError(
+            "The CSV does not contain any learner records."
+          );
+
+          return;
+        }
+
+        if (
+          dataRows.length >
+          100
+        ) {
+          setCsvError(
+            "Import a maximum of 100 learners at a time."
+          );
+
+          return;
+        }
+
+        const nextRows =
+          dataRows.map(
+            (
+              values,
+              index
+            ): CsvLearnerRow => {
+              const basicRow = {
+                rowNumber:
+                  index +
+                  2,
+
+                firstName:
+                  values[
+                    firstNameIndex
+                  ]?.trim() ??
+                  "",
+
+                lastName:
+                  values[
+                    lastNameIndex
+                  ]?.trim() ??
+                  "",
+
+                grade:
+                  values[
+                    gradeIndex
+                  ]?.trim() ??
+                  "",
+
+                section:
+                  values[
+                    sectionIndex
+                  ]?.trim() ??
+                  "",
+
+                age:
+                  values[
+                    ageIndex
+                  ]?.trim() ??
+                  "",
+              };
+
+              return {
+                ...basicRow,
+
+                errors:
+                  validateCsvRow(
+                    basicRow
+                  ),
+              };
+            }
+          );
+
+        setCsvRows(
+          nextRows
+        );
+      } catch (
+        fileError
+      ) {
+        console.error(
+          "Could not read CSV:",
+          fileError
+        );
+
+        setCsvError(
+          "Could not read the CSV file."
+        );
+      }
+    };
+
+  /* =========================
+     IMPORT CSV
+     ========================= */
+
+  const handleImportCsv =
+    async () => {
+      const user =
+        auth.currentUser;
+
+      if (
+        !user ||
+        !teacherId ||
+        user.uid !==
+          teacherId
+      ) {
+        navigate("/");
+
+        return;
+      }
+
+      if (
+        csvRows.length ===
+        0
+      ) {
+        setCsvError(
+          "Upload a CSV file first."
+        );
+
+        return;
+      }
+
+      const invalidRows =
+        csvRows.filter(
+          (
+            row
+          ) =>
+            row.errors.length >
+            0
+        );
+
+      if (
+        invalidRows.length >
+        0
+      ) {
+        setCsvError(
+          "Fix the invalid rows in the CSV before importing."
+        );
+
+        return;
+      }
+
+      try {
+        setImporting(
+          true
+        );
+
+        setCsvError(
+          ""
+        );
+
+        setImportSuccess(
+          ""
+        );
+
+        const batch =
+          writeBatch(
+            db
+          );
+
+        csvRows.forEach(
+          (
+            row
+          ) => {
+            const learnerReference =
+              doc(
+                collection(
+                  db,
+                  "learners"
+                )
+              );
+
+            batch.set(
+              learnerReference,
+              {
+                teacherId:
+                  user.uid,
+
+                firstName:
+                  row.firstName.trim(),
+
+                lastName:
+                  row.lastName.trim(),
+
+                grade:
+                  row.grade.trim(),
+
+                section:
+                  row.section.trim(),
+
+                age:
+                  Number(
+                    row.age
+                  ),
+
+                status:
+                  "active",
+
+                rfidUid:
+                  null,
+
+                guardianIds:
+                  [],
+
+                createdAt:
+                  serverTimestamp(),
+
+                updatedAt:
+                  serverTimestamp(),
+              }
+            );
+          }
+        );
+
+        await batch.commit();
+
+        setImportSuccess(
+          `${csvRows.length} learner${
+            csvRows.length ===
+            1
+              ? ""
+              : "s"
+          } imported successfully.`
+        );
+      } catch (
+        importError
+      ) {
+        console.error(
+          "Could not import learners:",
+          importError
+        );
+
+        setCsvError(
+          importError instanceof
+          Error
+            ? importError.message
+            : "Could not import learners."
+        );
+      } finally {
+        setImporting(
+          false
+        );
+      }
+    };
+
+  const csvInvalidCount =
+    csvRows.filter(
+      (
+        row
+      ) =>
+        row.errors.length >
+        0
+    ).length;
+
+  const csvValidCount =
+    csvRows.length -
+    csvInvalidCount;
+
+  /* =========================
+     LOADING
+     ========================= */
 
   if (
     loadingAuth
@@ -365,41 +1200,56 @@ function TeacherCreateLearnerPage() {
     );
   }
 
-  /*
-   * =========================
-   * UI
-   * =========================
-   */
+  /* =========================
+     UI
+     ========================= */
 
   return (
     <TeacherLayout>
 
       <div className="teacher-create-learner-heading">
 
+        <div>
+
+          <button
+            type="button"
+            className="teacher-create-learner-back"
+            onClick={() =>
+              navigate(
+                "/teacher/learners"
+              )
+            }
+          >
+            ← My Learners
+          </button>
+
+          <span className="teacher-create-learner-eyebrow">
+            LEARNER MANAGEMENT
+          </span>
+
+          <h2>
+            Create Learner
+          </h2>
+
+          <p>
+            Add a learner to your
+            Mathalino teacher account.
+          </p>
+
+        </div>
+
         <button
           type="button"
-          className="teacher-create-learner-back"
-          onClick={() =>
-            navigate(
-              "/teacher/learners"
-            )
+          className="teacher-create-learner-import"
+          disabled={
+            saving
+          }
+          onClick={
+            openImport
           }
         >
-          ← My Learners
+          Import CSV
         </button>
-
-        <span className="teacher-create-learner-eyebrow">
-          LEARNER MANAGEMENT
-        </span>
-
-        <h2>
-          Create Learner
-        </h2>
-
-        <p>
-          Add a learner to your
-          Mathalino teacher account.
-        </p>
 
       </div>
 
@@ -432,8 +1282,6 @@ function TeacherCreateLearnerPage() {
         </div>
 
         <div className="teacher-create-learner-grid">
-
-          {/* FIRST NAME */}
 
           <div className="teacher-create-learner-field">
 
@@ -472,8 +1320,6 @@ function TeacherCreateLearnerPage() {
 
           </div>
 
-          {/* LAST NAME */}
-
           <div className="teacher-create-learner-field">
 
             <label htmlFor="learner-last-name">
@@ -510,8 +1356,6 @@ function TeacherCreateLearnerPage() {
             )}
 
           </div>
-
-          {/* GRADE */}
 
           <div className="teacher-create-learner-field">
 
@@ -554,8 +1398,6 @@ function TeacherCreateLearnerPage() {
 
           </div>
 
-          {/* SECTION */}
-
           <div className="teacher-create-learner-field">
 
             <label htmlFor="learner-section">
@@ -592,8 +1434,6 @@ function TeacherCreateLearnerPage() {
             )}
 
           </div>
-
-          {/* AGE */}
 
           <div className="teacher-create-learner-field full">
 
@@ -638,8 +1478,6 @@ function TeacherCreateLearnerPage() {
           </div>
 
         </div>
-
-        {/* INITIAL SETTINGS */}
 
         <div className="teacher-create-learner-initial">
 
@@ -698,8 +1536,6 @@ function TeacherCreateLearnerPage() {
 
         </div>
 
-        {/* ACTIONS */}
-
         <div className="teacher-create-learner-actions">
 
           <button
@@ -735,6 +1571,416 @@ function TeacherCreateLearnerPage() {
         </div>
 
       </section>
+
+      {/* =========================
+          CSV IMPORT MODAL
+          ========================= */}
+
+      {importOpen && (
+        <div
+          className="teacher-csv-backdrop"
+          role="presentation"
+          onMouseDown={(
+            event
+          ) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              closeImport();
+            }
+          }}
+        >
+
+          <section
+            className="teacher-csv-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="csv-import-title"
+          >
+
+            {!importSuccess ? (
+              <>
+
+                <div className="teacher-csv-header">
+
+                  <div>
+
+                    <span>
+                      BULK LEARNER IMPORT
+                    </span>
+
+                    <h3 id="csv-import-title">
+                      Import Learners from CSV
+                    </h3>
+
+                    <p>
+                      Upload learner records
+                      and review them before
+                      adding them to Mathalino.
+                    </p>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="teacher-csv-close"
+                    aria-label="Close CSV import"
+                    disabled={
+                      importing
+                    }
+                    onClick={
+                      closeImport
+                    }
+                  >
+                    ×
+                  </button>
+
+                </div>
+
+                <div className="teacher-csv-body">
+
+                  <div className="teacher-csv-template">
+
+                    <div>
+
+                      <strong>
+                        CSV Template
+                      </strong>
+
+                      <span>
+                        Required columns:
+                        firstName, lastName,
+                        grade, section, age
+                      </span>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={
+                        importing
+                      }
+                      onClick={
+                        handleDownloadTemplate
+                      }
+                    >
+                      Download Template
+                    </button>
+
+                  </div>
+
+                  <div className="teacher-csv-upload">
+
+                    <label htmlFor="learner-csv-file">
+                      CSV FILE
+                    </label>
+
+                    <input
+                      id="learner-csv-file"
+                      type="file"
+                      accept=".csv,text/csv"
+                      disabled={
+                        importing
+                      }
+                      onClick={(
+                        event
+                      ) => {
+                        event.currentTarget.value =
+                          "";
+                      }}
+                      onChange={(
+                        event
+                      ) => {
+                        void handleCsvFile(
+                          event.target.files?.[
+                            0
+                          ] ??
+                            null
+                        );
+                      }}
+                    />
+
+                    {csvFileName && (
+                      <small>
+                        Selected:{" "}
+                        {
+                          csvFileName
+                        }
+                      </small>
+                    )}
+
+                  </div>
+
+                  {csvError && (
+                    <div
+                      className="teacher-csv-error"
+                      role="alert"
+                    >
+                      {csvError}
+                    </div>
+                  )}
+
+                  {csvRows.length >
+                    0 && (
+                    <>
+
+                      <div className="teacher-csv-summary">
+
+                        <div>
+                          <span>
+                            TOTAL
+                          </span>
+
+                          <strong>
+                            {
+                              csvRows.length
+                            }
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>
+                            VALID
+                          </span>
+
+                          <strong className="valid">
+                            {
+                              csvValidCount
+                            }
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>
+                            NEEDS FIX
+                          </span>
+
+                          <strong className="invalid">
+                            {
+                              csvInvalidCount
+                            }
+                          </strong>
+                        </div>
+
+                      </div>
+
+                      <div className="teacher-csv-preview">
+
+                        <table>
+
+                          <thead>
+
+                            <tr>
+                              <th>
+                                Row
+                              </th>
+
+                              <th>
+                                Learner
+                              </th>
+
+                              <th>
+                                Grade
+                              </th>
+
+                              <th>
+                                Section
+                              </th>
+
+                              <th>
+                                Age
+                              </th>
+
+                              <th>
+                                Status
+                              </th>
+                            </tr>
+
+                          </thead>
+
+                          <tbody>
+
+                            {csvRows.map(
+                              (
+                                row
+                              ) => (
+                                <tr
+                                  key={
+                                    row.rowNumber
+                                  }
+                                  className={
+                                    row.errors.length >
+                                    0
+                                      ? "invalid"
+                                      : ""
+                                  }
+                                >
+
+                                  <td>
+                                    {
+                                      row.rowNumber
+                                    }
+                                  </td>
+
+                                  <td>
+                                    <strong>
+                                      {
+                                        row.firstName ||
+                                        "—"
+                                      }{" "}
+                                      {
+                                        row.lastName ||
+                                        ""
+                                      }
+                                    </strong>
+                                  </td>
+
+                                  <td>
+                                    {
+                                      row.grade ||
+                                      "—"
+                                    }
+                                  </td>
+
+                                  <td>
+                                    {
+                                      row.section ||
+                                      "—"
+                                    }
+                                  </td>
+
+                                  <td>
+                                    {
+                                      row.age ||
+                                      "—"
+                                    }
+                                  </td>
+
+                                  <td>
+
+                                    {row.errors.length ===
+                                    0 ? (
+                                      <span className="teacher-csv-status valid">
+                                        Ready
+                                      </span>
+                                    ) : (
+                                      <div className="teacher-csv-row-errors">
+
+                                        <span className="teacher-csv-status invalid">
+                                          Invalid
+                                        </span>
+
+                                        <small>
+                                          {
+                                            row.errors.join(
+                                              ", "
+                                            )
+                                          }
+                                        </small>
+
+                                      </div>
+                                    )}
+
+                                  </td>
+
+                                </tr>
+                              )
+                            )}
+
+                          </tbody>
+
+                        </table>
+
+                      </div>
+
+                    </>
+                  )}
+
+                </div>
+
+                <div className="teacher-csv-actions">
+
+                  <button
+                    type="button"
+                    className="teacher-csv-cancel"
+                    disabled={
+                      importing
+                    }
+                    onClick={
+                      closeImport
+                    }
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    className="teacher-csv-confirm"
+                    disabled={
+                      importing ||
+                      csvRows.length ===
+                        0 ||
+                      csvInvalidCount >
+                        0
+                    }
+                    onClick={() => {
+                      void handleImportCsv();
+                    }}
+                  >
+                    {importing
+                      ? "Importing..."
+                      : `Import ${
+                          csvRows.length >
+                          0
+                            ? csvRows.length
+                            : ""
+                        } Learner${
+                          csvRows.length ===
+                          1
+                            ? ""
+                            : "s"
+                        }`}
+                  </button>
+
+                </div>
+
+              </>
+            ) : (
+              <div className="teacher-csv-success">
+
+                <div className="teacher-csv-success-icon">
+                  ✓
+                </div>
+
+                <h3>
+                  Import Complete
+                </h3>
+
+                <p>
+                  {
+                    importSuccess
+                  }
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      "/teacher/learners"
+                    )
+                  }
+                >
+                  View Learners
+                </button>
+
+              </div>
+            )}
+
+          </section>
+
+        </div>
+      )}
 
     </TeacherLayout>
   );

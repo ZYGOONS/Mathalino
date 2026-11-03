@@ -8,14 +8,18 @@ import {
 } from "react-router";
 
 import {
+  createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
+  type UserCredential,
 } from "firebase/auth";
 
 import {
   doc,
   getDoc,
+  runTransaction,
+  serverTimestamp,
 } from "firebase/firestore";
 
 import {
@@ -26,96 +30,27 @@ import {
 import mathalinoLogo from "../assets/mathalino-logo.png";
 
 import "./LoginPage.css";
+import "./TeacherRegistrationModal.css";
 
-/* =========================================================
-   SHA-256
-========================================================= */
+const TEACHER_TITLES = [
+  "Mr.",
+  "Mrs.",
+  "Ms.",
+  "Dr.",
+  "Mx.",
+  "No title",
+];
 
-async function sha256Hex(
-  value: string
-): Promise<string> {
-  const normalized =
-    value
-      .trim()
-      .toLowerCase();
-
-  const encoded =
-    new TextEncoder().encode(
-      normalized
-    );
-
-  const digest =
-    await window.crypto.subtle.digest(
-      "SHA-256",
-      encoded
-    );
-
-  return Array.from(
-    new Uint8Array(
-      digest
-    )
-  )
-    .map(
-      (byte) =>
-        byte
-          .toString(16)
-          .padStart(
-            2,
-            "0"
-          )
-    )
-    .join("");
-}
-
-/* =========================================================
-   TEACHER PASSWORD RESET CHECK
-========================================================= */
-
-async function teacherResetAllowed(
-  email: string
-): Promise<boolean> {
-  const hash =
-    await sha256Hex(
-      email
-    );
-
-  const accessReference =
-    doc(
-      db,
-      "teacherResetAccess",
-      hash
-    );
-
-  const accessSnapshot =
-    await getDoc(
-      accessReference
-    );
-
-  if (
-    !accessSnapshot.exists()
-  ) {
-    return false;
-  }
-
-  const data =
-    accessSnapshot.data();
-
-  return (
-    data.allowed === true
-  );
-}
-
-/* =========================================================
-   FIREBASE ERROR CODE
-========================================================= */
+const TEACHER_SCHOOLS = [
+  "University of Cebu - Banilad",
+];
 
 function getFirebaseErrorCode(
   error: unknown
 ): string {
   if (
     error &&
-    typeof error ===
-      "object" &&
+    typeof error === "object" &&
     "code" in error
   ) {
     return String(
@@ -130,9 +65,48 @@ function getFirebaseErrorCode(
   return "";
 }
 
-/* =========================================================
-   ICONS
-========================================================= */
+function getErrorMessage(
+  error: unknown
+): string {
+  if (
+    error instanceof Error
+  ) {
+    return error.message;
+  }
+
+  return "";
+}
+
+async function authenticateRegistration(
+  email: string,
+  password: string
+): Promise<UserCredential> {
+  try {
+    return await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+  } catch (error) {
+    const code =
+      getFirebaseErrorCode(
+        error
+      );
+
+    if (
+      code ===
+      "auth/email-already-in-use"
+    ) {
+      return await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+    }
+
+    throw error;
+  }
+}
 
 function MailIcon() {
   return (
@@ -264,9 +238,31 @@ function ResetIcon() {
   );
 }
 
-/* =========================================================
-   LOGIN PAGE
-========================================================= */
+function UserPlusIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+
+      <circle
+        cx="8"
+        cy="7"
+        r="4"
+      />
+
+      <path d="M19 8v6" />
+
+      <path d="M16 11h6" />
+    </svg>
+  );
+}
 
 function LoginPage() {
   const navigate =
@@ -297,10 +293,6 @@ function LoginPage() {
     setError,
   ] = useState("");
 
-  /* =======================================================
-     RESET PASSWORD STATE
-  ======================================================= */
-
   const [
     resetOpen,
     setResetOpen,
@@ -326,9 +318,75 @@ function LoginPage() {
     setResetSuccess,
   ] = useState("");
 
-  /* =======================================================
-     LOGIN
-  ======================================================= */
+  const [
+    registrationOpen,
+    setRegistrationOpen,
+  ] = useState(false);
+
+  const [
+    registrationTitle,
+    setRegistrationTitle,
+  ] = useState("");
+
+  const [
+    registrationFirstName,
+    setRegistrationFirstName,
+  ] = useState("");
+
+  const [
+    registrationMiddleInitial,
+    setRegistrationMiddleInitial,
+  ] = useState("");
+
+  const [
+    registrationLastName,
+    setRegistrationLastName,
+  ] = useState("");
+
+  const [
+    registrationEmail,
+    setRegistrationEmail,
+  ] = useState("");
+
+  const [
+    registrationSchool,
+    setRegistrationSchool,
+  ] = useState("");
+
+  const [
+    registrationPassword,
+    setRegistrationPassword,
+  ] = useState("");
+
+  const [
+    registrationConfirmPassword,
+    setRegistrationConfirmPassword,
+  ] = useState("");
+
+  const [
+    registrationShowPassword,
+    setRegistrationShowPassword,
+  ] = useState(false);
+
+  const [
+    registrationShowConfirm,
+    setRegistrationShowConfirm,
+  ] = useState(false);
+
+  const [
+    registrationLoading,
+    setRegistrationLoading,
+  ] = useState(false);
+
+  const [
+    registrationError,
+    setRegistrationError,
+  ] = useState("");
+
+  const [
+    registrationSuccess,
+    setRegistrationSuccess,
+  ] = useState("");
 
   const handleSubmit =
     async (
@@ -485,12 +543,12 @@ function LoginPage() {
       }
     };
 
-  /* =======================================================
-     OPEN RESET
-  ======================================================= */
-
   const openReset =
     () => {
+      setRegistrationOpen(
+        false
+      );
+
       setResetEmail(
         email
           .trim()
@@ -505,10 +563,6 @@ function LoginPage() {
         true
       );
     };
-
-  /* =======================================================
-     CLOSE RESET
-  ======================================================= */
 
   const closeReset =
     () => {
@@ -526,10 +580,6 @@ function LoginPage() {
 
       setResetSuccess("");
     };
-
-  /* =======================================================
-     PASSWORD RESET
-  ======================================================= */
 
   const handlePasswordReset =
     async (
@@ -550,7 +600,7 @@ function LoginPage() {
         )
       ) {
         setResetError(
-          "Enter a valid teacher email address."
+          "Enter a valid email address."
         );
 
         return;
@@ -565,28 +615,13 @@ function LoginPage() {
 
         setResetSuccess("");
 
-        const allowed =
-          await teacherResetAllowed(
-            normalizedEmail
-          );
-
-        if (
-          !allowed
-        ) {
-          setResetError(
-            "Password reset is available for teacher accounts only. Administrator accounts cannot recover their password from this page."
-          );
-
-          return;
-        }
-
         await sendPasswordResetEmail(
           auth,
           normalizedEmail
         );
 
         setResetSuccess(
-          "Password reset email sent. Check your inbox and follow the link to create a new password."
+          "Password reset email sent. Check your inbox and spam folder for the reset link."
         );
       } catch (
         resetRequestError
@@ -634,65 +669,382 @@ function LoginPage() {
       }
     };
 
+  const openRegistration =
+    () => {
+      setResetOpen(
+        false
+      );
+
+      setRegistrationError(
+        ""
+      );
+
+      setRegistrationSuccess(
+        ""
+      );
+
+      setRegistrationOpen(
+        true
+      );
+    };
+
+  const closeRegistration =
+    () => {
+      if (
+        registrationLoading
+      ) {
+        return;
+      }
+
+      setRegistrationOpen(
+        false
+      );
+
+      setRegistrationError(
+        ""
+      );
+
+      setRegistrationSuccess(
+        ""
+      );
+    };
+
+  const handleTeacherRegistration =
+    async (
+      event:
+        FormEvent<HTMLFormElement>
+    ) => {
+      event.preventDefault();
+
+      const title =
+        registrationTitle.trim();
+
+      const firstName =
+        registrationFirstName.trim();
+
+      const middleInitial =
+        registrationMiddleInitial
+          .trim()
+          .toUpperCase();
+
+      const lastName =
+        registrationLastName.trim();
+
+      const normalizedEmail =
+        registrationEmail
+          .trim()
+          .toLowerCase();
+
+      const school =
+        registrationSchool.trim();
+
+      const newPassword =
+        registrationPassword;
+
+      const confirmPassword =
+        registrationConfirmPassword;
+
+      setRegistrationError(
+        ""
+      );
+
+      setRegistrationSuccess(
+        ""
+      );
+
+      if (
+        !TEACHER_TITLES.includes(
+          title
+        )
+      ) {
+        setRegistrationError(
+          "Select a title."
+        );
+
+        return;
+      }
+
+      if (!firstName) {
+        setRegistrationError(
+          "Enter your first name."
+        );
+
+        return;
+      }
+
+      if (!lastName) {
+        setRegistrationError(
+          "Enter your last name."
+        );
+
+        return;
+      }
+
+      if (
+        !normalizedEmail ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+          normalizedEmail
+        )
+      ) {
+        setRegistrationError(
+          "Enter a valid email address."
+        );
+
+        return;
+      }
+
+      if (
+        !TEACHER_SCHOOLS.includes(
+          school
+        )
+      ) {
+        setRegistrationError(
+          "Select a school or organization."
+        );
+
+        return;
+      }
+
+      if (
+        newPassword.length < 6
+      ) {
+        setRegistrationError(
+          "Password must contain at least 6 characters."
+        );
+
+        return;
+      }
+
+      if (
+        confirmPassword !==
+        newPassword
+      ) {
+        setRegistrationError(
+          "Passwords do not match."
+        );
+
+        return;
+      }
+
+      const fullName = [
+        firstName,
+        middleInitial
+          ? `${middleInitial}.`
+          : null,
+        lastName,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      const displayName =
+        title ===
+        "No title"
+          ? firstName
+          : `${title} ${lastName}`;
+
+      try {
+        setRegistrationLoading(
+          true
+        );
+
+        const credential =
+          await authenticateRegistration(
+            normalizedEmail,
+            newPassword
+          );
+
+        const user =
+          credential.user;
+
+        const userReference =
+          doc(
+            db,
+            "users",
+            user.uid
+          );
+
+        try {
+          await runTransaction(
+            db,
+            async (
+              transaction
+            ) => {
+              const existing =
+                await transaction.get(
+                  userReference
+                );
+
+              if (
+                existing.exists()
+              ) {
+                throw new Error(
+                  "PROFILE_ALREADY_EXISTS"
+                );
+              }
+
+              transaction.set(
+                userReference,
+                {
+                  uid:
+                    user.uid,
+
+                  title,
+
+                  firstName,
+
+                  middleInitial,
+
+                  lastName,
+
+                  fullName,
+
+                  displayName,
+
+                  email:
+                    normalizedEmail,
+
+                  role:
+                    "teacher",
+
+                  school,
+
+                  createdAt:
+                    serverTimestamp(),
+                }
+              );
+            }
+          );
+        } catch (
+          profileError
+        ) {
+          if (
+            getErrorMessage(
+              profileError
+            ) ===
+            "PROFILE_ALREADY_EXISTS"
+          ) {
+            await signOut(
+              auth
+            );
+
+            setRegistrationError(
+              "This account already has a teacher profile. Please sign in or use Forgot Password."
+            );
+
+            return;
+          }
+
+          throw profileError;
+        }
+
+        await signOut(
+          auth
+        );
+
+        setEmail(
+          normalizedEmail
+        );
+
+        setPassword("");
+
+        setRegistrationSuccess(
+          "Teacher account created successfully. You can now sign in using your new account."
+        );
+      } catch (
+        registrationRequestError
+      ) {
+        console.error(
+          "Teacher registration error:",
+          registrationRequestError
+        );
+
+        try {
+          await signOut(
+            auth
+          );
+        } catch {
+          // Cleanup only.
+        }
+
+        const code =
+          getFirebaseErrorCode(
+            registrationRequestError
+          );
+
+        if (
+          code ===
+          "auth/invalid-email"
+        ) {
+          setRegistrationError(
+            "Enter a valid email address."
+          );
+        } else if (
+          code ===
+          "auth/weak-password"
+        ) {
+          setRegistrationError(
+            "Choose a stronger password with at least 6 characters."
+          );
+        } else if (
+          code ===
+            "auth/wrong-password" ||
+          code ===
+            "auth/invalid-credential"
+        ) {
+          setRegistrationError(
+            "An account already uses this email. Use the correct password or Forgot Password."
+          );
+        } else if (
+          code ===
+          "auth/too-many-requests"
+        ) {
+          setRegistrationError(
+            "Too many account attempts. Please try again later."
+          );
+        } else if (
+          code ===
+          "auth/network-request-failed"
+        ) {
+          setRegistrationError(
+            "Unable to connect. Check your internet connection and try again."
+          );
+        } else {
+          setRegistrationError(
+            "Account creation failed. Please try again."
+          );
+        }
+      } finally {
+        setRegistrationLoading(
+          false
+        );
+      }
+    };
+
   return (
     <>
       <div className="login-page">
 
         <div className="login-shell">
 
-          {/* ===============================================
-              LEFT VISUAL PANEL
-          =============================================== */}
-
           <section className="login-visual">
 
             <div className="login-decor-circle circle-one" />
-
             <div className="login-decor-circle circle-two" />
 
             <div
               className="login-pattern"
               aria-hidden="true"
             >
-              <span className="login-symbol symbol-1">
-                +
-              </span>
-
-              <span className="login-symbol symbol-2">
-                7
-              </span>
-
-              <span className="login-symbol symbol-3">
-                =
-              </span>
-
-              <span className="login-symbol symbol-4">
-                −
-              </span>
-
-              <span className="login-symbol symbol-5">
-                10
-              </span>
-
-              <span className="login-symbol symbol-6">
-                +
-              </span>
-
-              <span className="login-symbol symbol-7">
-                3
-              </span>
-
-              <span className="login-symbol symbol-8">
-                =
-              </span>
-
-              <span className="login-symbol symbol-9">
-                5
-              </span>
-
-              <span className="login-symbol symbol-10">
-                −
-              </span>
+              <span className="login-symbol symbol-1">+</span>
+              <span className="login-symbol symbol-2">7</span>
+              <span className="login-symbol symbol-3">=</span>
+              <span className="login-symbol symbol-4">−</span>
+              <span className="login-symbol symbol-5">10</span>
+              <span className="login-symbol symbol-6">+</span>
+              <span className="login-symbol symbol-7">3</span>
+              <span className="login-symbol symbol-8">=</span>
+              <span className="login-symbol symbol-9">5</span>
+              <span className="login-symbol symbol-10">−</span>
             </div>
 
             <div className="login-visual-content">
@@ -765,10 +1117,6 @@ function LoginPage() {
 
           </section>
 
-          {/* ===============================================
-              LOGIN FORM PANEL
-          =============================================== */}
-
           <section className="login-form-panel">
 
             <div className="login-card">
@@ -776,9 +1124,7 @@ function LoginPage() {
               <div className="login-brand">
 
                 <img
-                  src={
-                    mathalinoLogo
-                  }
+                  src={mathalinoLogo}
                   alt="Mathalino Logo"
                   className="login-logo"
                 />
@@ -820,13 +1166,9 @@ function LoginPage() {
                 }
               >
 
-                {/* EMAIL */}
-
                 <div className="login-form-group">
 
-                  <label
-                    htmlFor="login-email"
-                  >
+                  <label htmlFor="login-email">
                     Email
                   </label>
 
@@ -841,12 +1183,8 @@ function LoginPage() {
                       type="email"
                       autoComplete="email"
                       placeholder="Enter your email"
-                      value={
-                        email
-                      }
-                      disabled={
-                        loading
-                      }
+                      value={email}
+                      disabled={loading}
                       onChange={(
                         event
                       ) => {
@@ -856,9 +1194,7 @@ function LoginPage() {
                             .value
                         );
 
-                        setError(
-                          ""
-                        );
+                        setError("");
                       }}
                     />
 
@@ -866,13 +1202,9 @@ function LoginPage() {
 
                 </div>
 
-                {/* PASSWORD */}
-
                 <div className="login-form-group">
 
-                  <label
-                    htmlFor="login-password"
-                  >
+                  <label htmlFor="login-password">
                     Password
                   </label>
 
@@ -891,12 +1223,8 @@ function LoginPage() {
                       }
                       autoComplete="current-password"
                       placeholder="Enter your password"
-                      value={
-                        password
-                      }
-                      disabled={
-                        loading
-                      }
+                      value={password}
+                      disabled={loading}
                       onChange={(
                         event
                       ) => {
@@ -906,9 +1234,7 @@ function LoginPage() {
                             .value
                         );
 
-                        setError(
-                          ""
-                        );
+                        setError("");
                       }}
                     />
 
@@ -920,14 +1246,7 @@ function LoginPage() {
                           ? "Hide password"
                           : "Show password"
                       }
-                      title={
-                        showPassword
-                          ? "Hide password"
-                          : "Show password"
-                      }
-                      disabled={
-                        loading
-                      }
+                      disabled={loading}
                       onClick={() =>
                         setShowPassword(
                           (
@@ -946,8 +1265,6 @@ function LoginPage() {
 
                   </div>
 
-                  {/* MOVED BELOW PASSWORD FIELD */}
-
                   <div
                     style={{
                       display:
@@ -955,15 +1272,13 @@ function LoginPage() {
                       justifyContent:
                         "flex-end",
                       marginTop:
-                        "2px",
+                        "4px",
                     }}
                   >
                     <button
                       type="button"
                       className="login-forgot-button"
-                      disabled={
-                        loading
-                      }
+                      disabled={loading}
                       onClick={
                         openReset
                       }
@@ -974,8 +1289,6 @@ function LoginPage() {
 
                 </div>
 
-                {/* LOGIN ERROR */}
-
                 {error && (
                   <div
                     className="login-error"
@@ -985,19 +1298,49 @@ function LoginPage() {
                   </div>
                 )}
 
-                {/* LOGIN */}
-
                 <button
                   type="submit"
                   className="login-button"
-                  disabled={
-                    loading
-                  }
+                  disabled={loading}
                 >
                   {loading
                     ? "Signing in..."
                     : "Sign In"}
                 </button>
+
+                <div
+                  style={{
+                    display:
+                      "flex",
+                    alignItems:
+                      "center",
+                    justifyContent:
+                      "center",
+                    gap:
+                      "6px",
+                    marginTop:
+                      "10px",
+                    fontSize:
+                      "13px",
+                    color:
+                      "#71858c",
+                  }}
+                >
+                  <span>
+                    New teacher?
+                  </span>
+
+                  <button
+                    type="button"
+                    className="login-forgot-button"
+                    disabled={loading}
+                    onClick={
+                      openRegistration
+                    }
+                  >
+                    Create Account
+                  </button>
+                </div>
 
               </form>
 
@@ -1013,10 +1356,6 @@ function LoginPage() {
         </div>
 
       </div>
-
-      {/* =====================================================
-          PASSWORD RESET MODAL
-      ====================================================== */}
 
       {resetOpen && (
         <div
@@ -1045,12 +1384,8 @@ function LoginPage() {
               type="button"
               className="login-reset-close"
               aria-label="Close password reset"
-              disabled={
-                resetLoading
-              }
-              onClick={
-                closeReset
-              }
+              disabled={resetLoading}
+              onClick={closeReset}
             >
               <CloseIcon />
             </button>
@@ -1060,7 +1395,7 @@ function LoginPage() {
             </div>
 
             <span className="login-reset-eyebrow">
-              TEACHER ACCOUNT
+              ACCOUNT RECOVERY
             </span>
 
             <h2 id="reset-password-title">
@@ -1071,7 +1406,7 @@ function LoginPage() {
               Enter the email
               address associated
               with your Mathalino
-              teacher account.
+              account.
             </p>
 
             {!resetSuccess ? (
@@ -1084,10 +1419,8 @@ function LoginPage() {
 
                 <div className="login-form-group">
 
-                  <label
-                    htmlFor="reset-email"
-                  >
-                    Teacher Email
+                  <label htmlFor="reset-email">
+                    Email
                   </label>
 
                   <div className="login-input-wrapper">
@@ -1100,13 +1433,9 @@ function LoginPage() {
                       id="reset-email"
                       type="email"
                       autoComplete="email"
-                      placeholder="Enter your teacher email"
-                      value={
-                        resetEmail
-                      }
-                      disabled={
-                        resetLoading
-                      }
+                      placeholder="Enter your email"
+                      value={resetEmail}
+                      disabled={resetLoading}
                       autoFocus
                       onChange={(
                         event
@@ -1117,9 +1446,7 @@ function LoginPage() {
                             .value
                         );
 
-                        setResetError(
-                          ""
-                        );
+                        setResetError("");
                       }}
                     />
 
@@ -1132,31 +1459,19 @@ function LoginPage() {
                     className="login-error login-reset-message"
                     role="alert"
                   >
-                    {
-                      resetError
-                    }
+                    {resetError}
                   </div>
                 )}
 
                 <button
                   type="submit"
                   className="login-button"
-                  disabled={
-                    resetLoading
-                  }
+                  disabled={resetLoading}
                 >
                   {resetLoading
-                    ? "Checking account..."
+                    ? "Sending..."
                     : "Send Reset Email"}
                 </button>
-
-                <p className="login-reset-admin-note">
-                  Password recovery
-                  from this page is
-                  available for
-                  teacher accounts
-                  only.
-                </p>
 
               </form>
             ) : (
@@ -1166,16 +1481,623 @@ function LoginPage() {
                   className="login-success"
                   role="status"
                 >
-                  {
-                    resetSuccess
-                  }
+                  {resetSuccess}
                 </div>
 
                 <button
                   type="button"
                   className="login-button"
+                  onClick={closeReset}
+                >
+                  Back to Sign In
+                </button>
+
+              </div>
+            )}
+
+          </div>
+
+        </div>
+      )}
+
+      {registrationOpen && (
+        <div
+          className="login-reset-backdrop"
+          role="presentation"
+          onMouseDown={(
+            event
+          ) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              closeRegistration();
+            }
+          }}
+        >
+
+          <div
+            className="teacher-register-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="teacher-registration-title"
+          >
+
+            {!registrationSuccess ? (
+              <>
+                <div className="teacher-register-header">
+
+                  <div className="teacher-register-header-icon">
+                    <UserPlusIcon />
+                  </div>
+
+                  <div className="teacher-register-header-text">
+
+                    <span className="teacher-register-eyebrow">
+                      TEACHER REGISTRATION
+                    </span>
+
+                    <h2 id="teacher-registration-title">
+                      Create Teacher Account
+                    </h2>
+
+                    <p>
+                      Create a Mathalino teacher
+                      account for web and mobile access.
+                    </p>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="teacher-register-close"
+                    aria-label="Close teacher registration"
+                    disabled={
+                      registrationLoading
+                    }
+                    onClick={
+                      closeRegistration
+                    }
+                  >
+                    <CloseIcon />
+                  </button>
+
+                </div>
+
+                <form
+                  className="teacher-register-form"
+                  onSubmit={
+                    handleTeacherRegistration
+                  }
+                >
+
+                  <div className="teacher-register-columns">
+
+                    <section className="teacher-register-section">
+
+                      <div className="teacher-register-section-heading">
+
+                        <span>
+                          PERSONAL INFORMATION
+                        </span>
+
+                        <h3>
+                          Teacher Details
+                        </h3>
+
+                        <p>
+                          Basic information used
+                          for the teacher profile.
+                        </p>
+
+                      </div>
+
+                      <div className="teacher-register-field-grid">
+
+                        <div className="teacher-register-field">
+
+                          <label htmlFor="registration-title">
+                            Title
+                          </label>
+
+                          <select
+                            id="registration-title"
+                            value={
+                              registrationTitle
+                            }
+                            disabled={
+                              registrationLoading
+                            }
+                            onChange={(
+                              event
+                            ) => {
+                              setRegistrationTitle(
+                                event
+                                  .target
+                                  .value
+                              );
+
+                              setRegistrationError(
+                                ""
+                              );
+                            }}
+                          >
+                            <option value="">
+                              Select title
+                            </option>
+
+                            {TEACHER_TITLES.map(
+                              (
+                                title
+                              ) => (
+                                <option
+                                  key={title}
+                                  value={title}
+                                >
+                                  {title}
+                                </option>
+                              )
+                            )}
+
+                          </select>
+
+                        </div>
+
+                        <div className="teacher-register-field">
+
+                          <label htmlFor="registration-first-name">
+                            First Name
+                          </label>
+
+                          <div className="teacher-register-input-wrapper">
+
+                            <input
+                              id="registration-first-name"
+                              type="text"
+                              autoComplete="given-name"
+                              placeholder="First name"
+                              value={
+                                registrationFirstName
+                              }
+                              disabled={
+                                registrationLoading
+                              }
+                              onChange={(
+                                event
+                              ) => {
+                                setRegistrationFirstName(
+                                  event
+                                    .target
+                                    .value
+                                );
+
+                                setRegistrationError(
+                                  ""
+                                );
+                              }}
+                            />
+
+                          </div>
+
+                        </div>
+
+                        <div className="teacher-register-field">
+
+                          <label htmlFor="registration-middle">
+                            Middle Initial
+                            {" "}
+                            <span className="teacher-register-optional">
+                              (optional)
+                            </span>
+                          </label>
+
+                          <div className="teacher-register-input-wrapper">
+
+                            <input
+                              id="registration-middle"
+                              type="text"
+                              autoComplete="additional-name"
+                              placeholder="e.g. P"
+                              maxLength={1}
+                              value={
+                                registrationMiddleInitial
+                              }
+                              disabled={
+                                registrationLoading
+                              }
+                              onChange={(
+                                event
+                              ) => {
+                                setRegistrationMiddleInitial(
+                                  event
+                                    .target
+                                    .value
+                                    .slice(
+                                      0,
+                                      1
+                                    )
+                                    .toUpperCase()
+                                );
+
+                                setRegistrationError(
+                                  ""
+                                );
+                              }}
+                            />
+
+                          </div>
+
+                        </div>
+
+                        <div className="teacher-register-field">
+
+                          <label htmlFor="registration-last-name">
+                            Last Name
+                          </label>
+
+                          <div className="teacher-register-input-wrapper">
+
+                            <input
+                              id="registration-last-name"
+                              type="text"
+                              autoComplete="family-name"
+                              placeholder="Last name"
+                              value={
+                                registrationLastName
+                              }
+                              disabled={
+                                registrationLoading
+                              }
+                              onChange={(
+                                event
+                              ) => {
+                                setRegistrationLastName(
+                                  event
+                                    .target
+                                    .value
+                                );
+
+                                setRegistrationError(
+                                  ""
+                                );
+                              }}
+                            />
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </section>
+
+                    <section className="teacher-register-section">
+
+                      <div className="teacher-register-section-heading">
+
+                        <span>
+                          ACCOUNT INFORMATION
+                        </span>
+
+                        <h3>
+                          Sign-in Details
+                        </h3>
+
+                        <p>
+                          Credentials used across
+                          Mathalino web and mobile.
+                        </p>
+
+                      </div>
+
+                      <div className="teacher-register-field-grid">
+
+                        <div className="teacher-register-field full">
+
+                          <label htmlFor="registration-email">
+                            Email Address
+                          </label>
+
+                          <div className="teacher-register-input-wrapper">
+
+                            <span className="teacher-register-input-icon">
+                              <MailIcon />
+                            </span>
+
+                            <input
+                              id="registration-email"
+                              className="has-icon"
+                              type="email"
+                              autoComplete="email"
+                              placeholder="name@email.com"
+                              value={
+                                registrationEmail
+                              }
+                              disabled={
+                                registrationLoading
+                              }
+                              onChange={(
+                                event
+                              ) => {
+                                setRegistrationEmail(
+                                  event
+                                    .target
+                                    .value
+                                );
+
+                                setRegistrationError(
+                                  ""
+                                );
+                              }}
+                            />
+
+                          </div>
+
+                        </div>
+
+                        <div className="teacher-register-field full">
+
+                          <label htmlFor="registration-school">
+                            School or Organization
+                          </label>
+
+                          <select
+                            id="registration-school"
+                            value={
+                              registrationSchool
+                            }
+                            disabled={
+                              registrationLoading
+                            }
+                            onChange={(
+                              event
+                            ) => {
+                              setRegistrationSchool(
+                                event
+                                  .target
+                                  .value
+                              );
+
+                              setRegistrationError(
+                                ""
+                              );
+                            }}
+                          >
+                            <option value="">
+                              Select school or organization
+                            </option>
+
+                            {TEACHER_SCHOOLS.map(
+                              (
+                                school
+                              ) => (
+                                <option
+                                  key={school}
+                                  value={school}
+                                >
+                                  {school}
+                                </option>
+                              )
+                            )}
+
+                          </select>
+
+                        </div>
+
+                        <div className="teacher-register-field">
+
+                          <label htmlFor="registration-password">
+                            Password
+                          </label>
+
+                          <div className="teacher-register-input-wrapper">
+
+                            <span className="teacher-register-input-icon">
+                              <LockIcon />
+                            </span>
+
+                            <input
+                              id="registration-password"
+                              className="has-icon has-action"
+                              type={
+                                registrationShowPassword
+                                  ? "text"
+                                  : "password"
+                              }
+                              autoComplete="new-password"
+                              placeholder="Minimum 6 characters"
+                              value={
+                                registrationPassword
+                              }
+                              disabled={
+                                registrationLoading
+                              }
+                              onChange={(
+                                event
+                              ) => {
+                                setRegistrationPassword(
+                                  event
+                                    .target
+                                    .value
+                                );
+
+                                setRegistrationError(
+                                  ""
+                                );
+                              }}
+                            />
+
+                            <button
+                              type="button"
+                              className="teacher-register-password-toggle"
+                              aria-label={
+                                registrationShowPassword
+                                  ? "Hide password"
+                                  : "Show password"
+                              }
+                              disabled={
+                                registrationLoading
+                              }
+                              onClick={() =>
+                                setRegistrationShowPassword(
+                                  (
+                                    current
+                                  ) =>
+                                    !current
+                                )
+                              }
+                            >
+                              {registrationShowPassword ? (
+                                <EyeOffIcon />
+                              ) : (
+                                <EyeIcon />
+                              )}
+                            </button>
+
+                          </div>
+
+                        </div>
+
+                        <div className="teacher-register-field">
+
+                          <label htmlFor="registration-confirm-password">
+                            Confirm Password
+                          </label>
+
+                          <div className="teacher-register-input-wrapper">
+
+                            <span className="teacher-register-input-icon">
+                              <LockIcon />
+                            </span>
+
+                            <input
+                              id="registration-confirm-password"
+                              className="has-icon has-action"
+                              type={
+                                registrationShowConfirm
+                                  ? "text"
+                                  : "password"
+                              }
+                              autoComplete="new-password"
+                              placeholder="Re-enter password"
+                              value={
+                                registrationConfirmPassword
+                              }
+                              disabled={
+                                registrationLoading
+                              }
+                              onChange={(
+                                event
+                              ) => {
+                                setRegistrationConfirmPassword(
+                                  event
+                                    .target
+                                    .value
+                                );
+
+                                setRegistrationError(
+                                  ""
+                                );
+                              }}
+                            />
+
+                            <button
+                              type="button"
+                              className="teacher-register-password-toggle"
+                              aria-label={
+                                registrationShowConfirm
+                                  ? "Hide confirmation password"
+                                  : "Show confirmation password"
+                              }
+                              disabled={
+                                registrationLoading
+                              }
+                              onClick={() =>
+                                setRegistrationShowConfirm(
+                                  (
+                                    current
+                                  ) =>
+                                    !current
+                                )
+                              }
+                            >
+                              {registrationShowConfirm ? (
+                                <EyeOffIcon />
+                              ) : (
+                                <EyeIcon />
+                              )}
+                            </button>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </section>
+
+                  </div>
+
+                  {registrationError && (
+                    <div
+                      className="teacher-register-message error"
+                      role="alert"
+                    >
+                      {registrationError}
+                    </div>
+                  )}
+
+                  <div className="teacher-register-actions">
+
+                    <button
+                      type="button"
+                      className="teacher-register-cancel"
+                      disabled={
+                        registrationLoading
+                      }
+                      onClick={
+                        closeRegistration
+                      }
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="teacher-register-submit"
+                      disabled={
+                        registrationLoading
+                      }
+                    >
+                      {registrationLoading
+                        ? "Creating Account..."
+                        : "Create Account"}
+                    </button>
+
+                  </div>
+
+                </form>
+              </>
+            ) : (
+              <div className="teacher-register-success">
+
+                <div className="teacher-register-success-icon">
+                  ✓
+                </div>
+
+                <h3>
+                  Account Created
+                </h3>
+
+                <p>
+                  {registrationSuccess}
+                </p>
+
+                <button
+                  type="button"
+                  className="teacher-register-submit"
                   onClick={
-                    closeReset
+                    closeRegistration
                   }
                 >
                   Back to Sign In

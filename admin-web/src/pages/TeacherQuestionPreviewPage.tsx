@@ -28,12 +28,17 @@ import {
 import TeacherLayout from "../components/TeacherLayout";
 
 import {
+  buildTeacherMadeQuestion,
   generateActivityQuestions,
   type GeneratedQuestion,
   type QuestionActivity,
 } from "../services/activityQuestionGenerator";
 
 import "./TeacherQuestionPreviewPage.css";
+
+type QuestionSource =
+  | "generated"
+  | "teacher-made";
 
 interface ActivityRecord
   extends QuestionActivity {
@@ -46,6 +51,19 @@ interface ActivityRecord
   description: string;
 
   status: string;
+
+  questionSource:
+    QuestionSource;
+}
+
+interface ManualQuestionDraft {
+  number: number;
+
+  questionType: string;
+
+  firstOperand: string;
+
+  secondOperand: string;
 }
 
 function difficultyLabel(
@@ -74,7 +92,9 @@ function difficultyLabel(
 function questionTypeLabel(
   type: string
 ): string {
-  switch (type) {
+  switch (
+    type
+  ) {
     case "addition":
       return "Addition";
 
@@ -109,7 +129,8 @@ function normalizeQuestion(
   const data =
     (
       value &&
-      typeof value === "object"
+      typeof value ===
+        "object"
     )
       ? value as Record<
           string,
@@ -119,9 +140,9 @@ function normalizeQuestion(
 
   const firstOperand =
     data.firstOperand ===
-      null ||
+        null ||
     data.firstOperand ===
-      undefined
+        undefined
       ? null
       : Number(
           data.firstOperand
@@ -129,9 +150,9 @@ function normalizeQuestion(
 
   const secondOperand =
     data.secondOperand ===
-      null ||
+        null ||
     data.secondOperand ===
-      undefined
+        undefined
       ? null
       : Number(
           data.secondOperand
@@ -174,6 +195,94 @@ function normalizeQuestion(
   };
 }
 
+function defaultQuestionType(
+  topic: string
+): string {
+  const normalized =
+    topic
+      .trim()
+      .toLowerCase();
+
+  if (
+    normalized ===
+    "addition"
+  ) {
+    return "addition";
+  }
+
+  if (
+    normalized ===
+    "subtraction"
+  ) {
+    return "subtraction";
+  }
+
+  return "greater";
+}
+
+function createManualDrafts(
+  activity:
+    ActivityRecord
+): ManualQuestionDraft[] {
+  if (
+    activity.savedQuestions.length >
+    0
+  ) {
+    return activity.savedQuestions.map(
+      (
+        question
+      ) => ({
+        number:
+          question.number,
+
+        questionType:
+          question.questionType,
+
+        firstOperand:
+          question.firstOperand ===
+          null
+            ? ""
+            : String(
+                question.firstOperand
+              ),
+
+        secondOperand:
+          question.secondOperand ===
+          null
+            ? ""
+            : String(
+                question.secondOperand
+              ),
+      })
+    );
+  }
+
+  return Array.from(
+    {
+      length:
+        activity.questionCount,
+    },
+    (
+      _,
+      index
+    ) => ({
+      number:
+        index + 1,
+
+      questionType:
+        defaultQuestionType(
+          activity.topic
+        ),
+
+      firstOperand:
+        "",
+
+      secondOperand:
+        "",
+    })
+  );
+}
+
 function TeacherQuestionPreviewPage() {
   const navigate =
     useNavigate();
@@ -199,252 +308,300 @@ function TeacherQuestionPreviewPage() {
   ] =
     useState<
       GeneratedQuestion[]
-    >([]);
+    >(
+      []
+    );
+
+  const [
+    manualDrafts,
+    setManualDrafts,
+  ] =
+    useState<
+      ManualQuestionDraft[]
+    >(
+      []
+    );
 
   const [
     saved,
     setSaved,
   ] =
-    useState(false);
+    useState(
+      false
+    );
 
   const [
     loading,
     setLoading,
   ] =
-    useState(true);
+    useState(
+      true
+    );
 
   const [
     saving,
     setSaving,
   ] =
-    useState(false);
+    useState(
+      false
+    );
+
+  const [
+    cancelling,
+    setCancelling,
+  ] =
+    useState(
+      false
+    );
 
   const [
     error,
     setError,
   ] =
-    useState("");
+    useState(
+      ""
+    );
 
   const [
     success,
     setSuccess,
   ] =
-    useState("");
+    useState(
+      ""
+    );
 
-  /*
-   * =========================
-   * LOAD
-   * =========================
-   */
+  useEffect(
+    () => {
+      if (
+        !activityId
+      ) {
+        navigate(
+          "/teacher/activities"
+        );
 
-  useEffect(() => {
-    if (!activityId) {
-      navigate(
-        "/teacher/activities"
-      );
+        return;
+      }
 
-      return;
-    }
-
-    const unsubscribe =
-      onAuthStateChanged(
-        auth,
-        async (
-          user
-        ) => {
-          if (!user) {
-            navigate("/");
-
-            return;
-          }
-
-          try {
-            setLoading(
-              true
-            );
-
-            setError(
-              ""
-            );
-
-            const reference =
-              doc(
-                db,
-                "activities",
-                activityId
-              );
-
-            const snapshot =
-              await getDoc(
-                reference
-              );
-
+      const unsubscribe =
+        onAuthStateChanged(
+          auth,
+          async (
+            user
+          ) => {
             if (
-              !snapshot.exists()
+              !user
             ) {
-              setError(
-                "Activity was not found."
-              );
-
-              setLoading(
-                false
+              navigate(
+                "/"
               );
 
               return;
             }
 
-            const data =
-              snapshot.data();
-
-            if (
-              data.teacherId !==
-              user.uid
-            ) {
-              setError(
-                "This activity does not belong to your account."
-              );
-
+            try {
               setLoading(
-                false
+                true
               );
 
-              return;
-            }
+              setError(
+                ""
+              );
 
-            const savedQuestions =
-              Array.isArray(
-                data.savedQuestions
-              )
-                ? data.savedQuestions.map(
-                    normalizeQuestion
-                  )
-                : [];
+              const reference =
+                doc(
+                  db,
+                  "activities",
+                  activityId
+                );
 
-            const loadedActivity:
-              ActivityRecord = {
-              id:
-                snapshot.id,
+              const snapshot =
+                await getDoc(
+                  reference
+                );
 
-              teacherId:
-                data.teacherId ??
-                "",
+              if (
+                !snapshot.exists()
+              ) {
+                setError(
+                  "Activity was not found."
+                );
 
-              title:
-                data.title ??
-                "",
+                setLoading(
+                  false
+                );
 
-              topic:
-                data.topic ??
-                "",
+                return;
+              }
 
-              grade:
-                data.grade ??
-                "",
+              const data =
+                snapshot.data();
 
-              difficulty:
-                data.difficulty ??
-                "easy",
+              if (
+                data.teacherId !==
+                user.uid
+              ) {
+                setError(
+                  "This activity does not belong to your account."
+                );
 
-              description:
-                data.description ??
-                "",
+                setLoading(
+                  false
+                );
 
-              status:
-                data.status ??
-                "active",
+                return;
+              }
 
-              questionCount:
-                Number(
-                  data.questionCount ??
-                    0
-                ),
+              const savedQuestions =
+                Array.isArray(
+                  data.savedQuestions
+                )
+                  ? data.savedQuestions.map(
+                      normalizeQuestion
+                    )
+                  : [];
 
-              minNumber:
-                Number(
-                  data.minNumber ??
-                    0
-                ),
+              const questionSource:
+                QuestionSource =
+                data.questionSource ===
+                "teacher-made"
+                  ? "teacher-made"
+                  : "generated";
 
-              maxNumber:
-                Number(
-                  data.maxNumber ??
-                    10
-                ),
+              const loadedActivity:
+                ActivityRecord = {
+                id:
+                  snapshot.id,
 
-              savedQuestions,
-            };
+                teacherId:
+                  data.teacherId ??
+                  "",
 
-            setActivity(
-              loadedActivity
-            );
+                title:
+                  data.title ??
+                  "",
 
-            /*
-             * Existing saved set:
-             * generator validates it.
-             *
-             * Empty set:
-             * generator creates a
-             * temporary preview.
-             */
+                topic:
+                  data.topic ??
+                  "",
 
-            const generated =
-              generateActivityQuestions(
+                grade:
+                  data.grade ??
+                  "",
+
+                difficulty:
+                  data.difficulty ??
+                  "easy",
+
+                description:
+                  data.description ??
+                  "",
+
+                status:
+                  data.status ??
+                  "active",
+
+                questionCount:
+                  Number(
+                    data.questionCount ??
+                      0
+                  ),
+
+                minNumber:
+                  Number(
+                    data.minNumber ??
+                      0
+                  ),
+
+                maxNumber:
+                  Number(
+                    data.maxNumber ??
+                      10
+                  ),
+
+                savedQuestions,
+
+                questionSource,
+              };
+
+              setActivity(
                 loadedActivity
               );
 
-            setQuestions(
-              generated
-            );
+              if (
+                questionSource ===
+                "generated"
+              ) {
+                const generated =
+                  generateActivityQuestions(
+                    loadedActivity
+                  );
 
-            setSaved(
-              savedQuestions.length >
+                setQuestions(
+                  generated
+                );
+
+                setManualDrafts(
+                  []
+                );
+              } else {
+                setQuestions(
+                  savedQuestions
+                );
+
+                setManualDrafts(
+                  createManualDrafts(
+                    loadedActivity
+                  )
+                );
+              }
+
+              setSaved(
+                savedQuestions.length >
                 0
-            );
+              );
 
-            setLoading(
-              false
-            );
-          } catch (
-            loadError
-          ) {
-            console.error(
-              "Could not load question preview:",
+              setLoading(
+                false
+              );
+            } catch (
               loadError
-            );
+            ) {
+              console.error(
+                "Could not load question preview:",
+                loadError
+              );
 
-            setError(
-              loadError instanceof
-              Error
-                ? loadError.message
-                : "Could not load the question preview."
-            );
+              setError(
+                loadError instanceof
+                Error
+                  ? loadError.message
+                  : "Could not load the question preview."
+              );
 
-            setLoading(
-              false
-            );
+              setLoading(
+                false
+              );
+            }
           }
-        }
-      );
+        );
 
-    return () => {
-      unsubscribe();
-    };
-  }, [
-    activityId,
-    navigate,
-  ]);
-
-  /*
-   * =========================
-   * REGENERATE
-   * =========================
-   */
+      return () => {
+        unsubscribe();
+      };
+    },
+    [
+      activityId,
+      navigate,
+    ]
+  );
 
   const handleRegenerate =
     () => {
       if (
         !activity ||
-        saved
+        saved ||
+        activity.questionSource !==
+          "generated"
       ) {
         return;
       }
@@ -462,10 +619,6 @@ function TeacherQuestionPreviewPage() {
           generateActivityQuestions({
             ...activity,
 
-            /*
-             * Force a newly generated
-             * unsaved set.
-             */
             savedQuestions:
               [],
           });
@@ -490,20 +643,146 @@ function TeacherQuestionPreviewPage() {
       }
     };
 
+  const updateManualDraft =
+    (
+      index: number,
+      changes:
+        Partial<
+          ManualQuestionDraft
+        >
+    ) => {
+      setManualDrafts(
+        (
+          current
+        ) =>
+          current.map(
+            (
+              draft,
+              draftIndex
+            ) =>
+              draftIndex ===
+              index
+                ? {
+                    ...draft,
+                    ...changes,
+                  }
+                : draft
+          )
+      );
+
+      setError(
+        ""
+      );
+
+      setSuccess(
+        ""
+      );
+    };
+
+  const buildManualQuestions =
+    (): GeneratedQuestion[] => {
+      if (
+        !activity
+      ) {
+        return [];
+      }
+
+      return manualDrafts.map(
+        (
+          draft,
+          index
+        ) => {
+          const first =
+            draft.firstOperand.trim() ===
+            ""
+              ? null
+              : Number(
+                  draft.firstOperand
+                );
+
+          const second =
+            draft.secondOperand.trim() ===
+            ""
+              ? null
+              : Number(
+                  draft.secondOperand
+                );
+
+          try {
+            return buildTeacherMadeQuestion(
+              activity,
+              {
+                number:
+                  index + 1,
+
+                questionType:
+                  draft.questionType,
+
+                firstOperand:
+                  first,
+
+                secondOperand:
+                  second,
+              }
+            );
+          } catch (
+            questionError
+          ) {
+            const message =
+              questionError instanceof
+              Error
+                ? questionError.message
+                : "Invalid question.";
+
+            throw new Error(
+              `Question ${index + 1}: ${message}`
+            );
+          }
+        }
+      );
+    };
+
   /*
    * =========================
-   * SAVE QUESTION SET
+   * CANCEL UNSAVED ACTIVITY
    * =========================
    */
 
-  const handleSave =
+  const handleCancel =
     async () => {
       if (
-        !activityId ||
         !activity ||
-        saved ||
-        questions.length ===
-          0
+        !activityId
+      ) {
+        navigate(
+          "/teacher/activities"
+        );
+
+        return;
+      }
+
+      /*
+       * Once the question set is saved,
+       * this button behaves like normal
+       * back navigation.
+       */
+      if (
+        saved
+      ) {
+        navigate(
+          `/teacher/activities/${activityId}`
+        );
+
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          "Cancel this activity?\n\nThe unsaved activity and its question set will be discarded."
+        );
+
+      if (
+        !confirmed
       ) {
         return;
       }
@@ -516,7 +795,114 @@ function TeacherQuestionPreviewPage() {
         user.uid !==
           activity.teacherId
       ) {
-        navigate("/");
+        navigate(
+          "/"
+        );
+
+        return;
+      }
+
+      try {
+        setCancelling(
+          true
+        );
+
+        setError(
+          ""
+        );
+
+        /*
+         * We intentionally UPDATE instead
+         * of DELETE.
+         *
+         * Teacher Firestore permissions
+         * allow updating owned activities,
+         * while document deletion is not
+         * currently permitted.
+         *
+         * libraryVisible:false ensures
+         * this cancelled draft will not
+         * appear in the Activity Library.
+         */
+        await updateDoc(
+          doc(
+            db,
+            "activities",
+            activityId
+          ),
+          {
+            status:
+              "cancelled",
+
+            libraryVisible:
+              false,
+
+            trashed:
+              true,
+
+            savedQuestions:
+              [],
+
+            updatedAt:
+              serverTimestamp(),
+          }
+        );
+
+        navigate(
+          "/teacher/activities",
+          {
+            replace:
+              true,
+          }
+        );
+      } catch (
+        cancelError
+      ) {
+        console.error(
+          "Could not cancel activity:",
+          cancelError
+        );
+
+        setError(
+          cancelError instanceof
+          Error
+            ? cancelError.message
+            : "Could not cancel the activity."
+        );
+      } finally {
+        setCancelling(
+          false
+        );
+      }
+    };
+
+  /*
+   * =========================
+   * SAVE QUESTION SET
+   * =========================
+   */
+
+  const handleSave =
+    async () => {
+      if (
+        !activityId ||
+        !activity ||
+        saved
+      ) {
+        return;
+      }
+
+      const user =
+        auth.currentUser;
+
+      if (
+        !user ||
+        user.uid !==
+          activity.teacherId
+      ) {
+        navigate(
+          "/"
+        );
 
         return;
       }
@@ -534,12 +920,14 @@ function TeacherQuestionPreviewPage() {
           ""
         );
 
-        /*
-         * Validate the preview one
-         * final time before saving.
-         */
+        const finalQuestions =
+          activity.questionSource ===
+          "teacher-made"
+            ? buildManualQuestions()
+            : questions;
+
         if (
-          questions.length !==
+          finalQuestions.length !==
           activity.questionCount
         ) {
           throw new Error(
@@ -547,7 +935,7 @@ function TeacherQuestionPreviewPage() {
           );
         }
 
-        questions.forEach(
+        finalQuestions.forEach(
           (
             question,
             index
@@ -574,7 +962,7 @@ function TeacherQuestionPreviewPage() {
           reference,
           {
             savedQuestions:
-              questions,
+              finalQuestions,
 
             assignmentRevision:
               increment(
@@ -586,6 +974,10 @@ function TeacherQuestionPreviewPage() {
           }
         );
 
+        setQuestions(
+          finalQuestions
+        );
+
         setActivity(
           (
             current
@@ -595,7 +987,7 @@ function TeacherQuestionPreviewPage() {
                   ...current,
 
                   savedQuestions:
-                    questions,
+                    finalQuestions,
                 }
               : current
         );
@@ -650,13 +1042,16 @@ function TeacherQuestionPreviewPage() {
         <button
           type="button"
           className="teacher-question-preview-back"
-          onClick={() =>
-            navigate(
-              `/teacher/activities/${activityId}`
-            )
+          disabled={
+            cancelling
           }
+          onClick={() => {
+            void handleCancel();
+          }}
         >
-          ← Activity Details
+          {saved
+            ? "← Activity Details"
+            : "← Cancel Activity"}
         </button>
 
         <span className="teacher-question-preview-eyebrow">
@@ -664,13 +1059,17 @@ function TeacherQuestionPreviewPage() {
         </span>
 
         <h2>
-          Preview Questions
+          {activity?.questionSource ===
+          "teacher-made"
+            ? "Create Questions"
+            : "Preview Questions"}
         </h2>
 
         <p>
-          Review the questions that will
-          be used during the learner's
-          Smart Analyzer Board session.
+          {activity?.questionSource ===
+          "teacher-made"
+            ? "Create the question set that will be used during the learner's Smart Analyzer Board session."
+            : "Review the generated questions that will be used during the learner's Smart Analyzer Board session."}
         </p>
 
       </div>
@@ -695,8 +1094,6 @@ function TeacherQuestionPreviewPage() {
 
       {activity && (
         <>
-
-          {/* ACTIVITY SUMMARY */}
 
           <section className="teacher-question-preview-summary">
 
@@ -726,7 +1123,7 @@ function TeacherQuestionPreviewPage() {
               >
                 {saved
                   ? "Saved Question Set"
-                  : "Preview Not Saved"}
+                  : "Not Saved"}
               </span>
 
             </div>
@@ -784,11 +1181,22 @@ function TeacherQuestionPreviewPage() {
                 </strong>
               </div>
 
+              <div>
+                <span>
+                  SOURCE
+                </span>
+
+                <strong>
+                  {activity.questionSource ===
+                  "teacher-made"
+                    ? "Teacher-made"
+                    : "Generated"}
+                </strong>
+              </div>
+
             </div>
 
           </section>
-
-          {/* NOTICE */}
 
           <section
             className={
@@ -801,42 +1209,65 @@ function TeacherQuestionPreviewPage() {
             <strong>
               {saved
                 ? "This question set is saved"
-                : "Review before saving"}
+                : activity.questionSource ===
+                    "teacher-made"
+                  ? "Create each question before saving"
+                  : "Review before saving"}
             </strong>
 
             <p>
               {saved
-                ? "These are the saved questions for this activity. To create a different set, edit a question-generating setting first, then return to Preview Questions."
-                : "These questions are only a preview right now. You may regenerate them until you are satisfied, then save the final set."}
+                ? "These questions are now saved for this activity."
+                : activity.questionSource ===
+                    "teacher-made"
+                  ? `Enter question values within the ${activity.minNumber}–${activity.maxNumber} activity range.`
+                  : "You may regenerate the questions until you are satisfied, then save the final set."}
             </p>
 
           </section>
-
-          {/* ACTION BAR */}
 
           {!saved && (
             <div className="teacher-question-preview-actions">
 
               <button
                 type="button"
-                className="teacher-question-preview-regenerate"
+                className="teacher-question-preview-cancel"
                 disabled={
-                  saving
+                  saving ||
+                  cancelling
                 }
-                onClick={
-                  handleRegenerate
-                }
+                onClick={() => {
+                  void handleCancel();
+                }}
               >
-                Regenerate Questions
+                {cancelling
+                  ? "Cancelling..."
+                  : "Cancel"}
               </button>
+
+              {activity.questionSource ===
+                "generated" && (
+                <button
+                  type="button"
+                  className="teacher-question-preview-regenerate"
+                  disabled={
+                    saving ||
+                    cancelling
+                  }
+                  onClick={
+                    handleRegenerate
+                  }
+                >
+                  Regenerate Questions
+                </button>
+              )}
 
               <button
                 type="button"
                 className="teacher-question-preview-save"
                 disabled={
                   saving ||
-                  questions.length ===
-                    0
+                  cancelling
                 }
                 onClick={() => {
                   void handleSave();
@@ -850,120 +1281,342 @@ function TeacherQuestionPreviewPage() {
             </div>
           )}
 
-          {/* QUESTIONS */}
+          {activity.questionSource ===
+            "teacher-made" &&
+          !saved ? (
+            <section className="teacher-question-preview-section">
 
-          <section className="teacher-question-preview-section">
+              <div className="teacher-question-preview-section-heading">
 
-            <div className="teacher-question-preview-section-heading">
+                <div>
 
-              <div>
+                  <span>
+                    TEACHER-MADE QUESTION SET
+                  </span>
 
-                <span>
-                  QUESTION SET
-                </span>
+                  <h3>
+                    {
+                      manualDrafts.length
+                    }{" "}
+                    Questions
+                  </h3>
 
-                <h3>
-                  {
-                    questions.length
-                  }{" "}
-                  Questions
-                </h3>
+                </div>
 
-              </div>
-
-              <small>
-                Answers are shown for
-                teacher review only.
-              </small>
-
-            </div>
-
-            {questions.length ===
-              0 && (
-              <div className="teacher-question-preview-empty">
-
-                No questions are
-                available.
+                <small>
+                  Fill in each question before saving.
+                </small>
 
               </div>
-            )}
 
-            {questions.length >
-              0 && (
-              <div className="teacher-question-preview-list">
+              <div className="teacher-manual-question-list">
 
-                {questions.map(
+                {manualDrafts.map(
                   (
-                    question
-                  ) => (
-                    <article
-                      key={
-                        question.number
-                      }
-                      className="teacher-question-preview-card"
-                    >
+                    draft,
+                    index
+                  ) => {
+                    const normalizedTopic =
+                      activity.topic
+                        .trim()
+                        .toLowerCase();
 
-                      <div className="teacher-question-preview-number">
-                        {
-                          question.number
+                    const isNumberSense =
+                      normalizedTopic ===
+                      "number sense";
+
+                    const needsSecond =
+                      ![
+                        "after",
+                        "before",
+                      ].includes(
+                        draft.questionType
+                      );
+
+                    return (
+                      <article
+                        key={
+                          draft.number
                         }
-                      </div>
+                        className="teacher-manual-question-card"
+                      >
 
-                      <div className="teacher-question-preview-content">
+                        <div className="teacher-manual-question-number">
+                          {
+                            index + 1
+                          }
+                        </div>
 
-                        <span>
-                          {questionTypeLabel(
-                            question.questionType
+                        <div className="teacher-manual-question-fields">
+
+                          {isNumberSense && (
+                            <div className="teacher-manual-field full">
+
+                              <label>
+                                QUESTION TYPE
+                              </label>
+
+                              <select
+                                value={
+                                  draft.questionType
+                                }
+                                onChange={(
+                                  event
+                                ) =>
+                                  updateManualDraft(
+                                    index,
+                                    {
+                                      questionType:
+                                        event.target.value,
+
+                                      secondOperand:
+                                        [
+                                          "after",
+                                          "before",
+                                        ].includes(
+                                          event.target.value
+                                        )
+                                          ? ""
+                                          : draft.secondOperand,
+                                    }
+                                  )
+                                }
+                              >
+                                <option value="greater">
+                                  Greater Number
+                                </option>
+
+                                <option value="smaller">
+                                  Smaller Number
+                                </option>
+
+                                <option value="after">
+                                  Number After
+                                </option>
+
+                                <option value="before">
+                                  Number Before
+                                </option>
+
+                                <option value="missing">
+                                  Missing Number
+                                </option>
+                              </select>
+
+                            </div>
                           )}
-                        </span>
 
-                        <strong>
-                          {
-                            question.prompt
-                          }
-                        </strong>
+                          <div className="teacher-manual-field">
 
-                      </div>
+                            <label>
+                              {draft.questionType ===
+                              "missing"
+                                ? "STARTING NUMBER"
+                                : "FIRST NUMBER"}
+                            </label>
 
-                      <div className="teacher-question-preview-answer">
+                            <input
+                              type="number"
+                              min={
+                                activity.minNumber
+                              }
+                              max={
+                                activity.maxNumber
+                              }
+                              value={
+                                draft.firstOperand
+                              }
+                              placeholder={`${activity.minNumber}–${activity.maxNumber}`}
+                              onChange={(
+                                event
+                              ) =>
+                                updateManualDraft(
+                                  index,
+                                  {
+                                    firstOperand:
+                                      event.target.value,
 
-                        <span>
-                          ANSWER
-                        </span>
+                                    secondOperand:
+                                      draft.questionType ===
+                                      "missing"
+                                        ? event.target.value ===
+                                          ""
+                                          ? ""
+                                          : String(
+                                              Number(
+                                                event.target.value
+                                              ) + 2
+                                            )
+                                        : draft.secondOperand,
+                                  }
+                                )
+                              }
+                            />
 
-                        <strong>
-                          {
-                            question.correctAnswer
-                          }
-                        </strong>
+                          </div>
 
-                      </div>
+                          {needsSecond && (
+                            <div className="teacher-manual-field">
 
-                    </article>
-                  )
+                              <label>
+                                {draft.questionType ===
+                                "missing"
+                                  ? "ENDING NUMBER"
+                                  : "SECOND NUMBER"}
+                              </label>
+
+                              <input
+                                type="number"
+                                min={
+                                  activity.minNumber
+                                }
+                                max={
+                                  activity.maxNumber
+                                }
+                                value={
+                                  draft.secondOperand
+                                }
+                                readOnly={
+                                  draft.questionType ===
+                                  "missing"
+                                }
+                                placeholder={`${activity.minNumber}–${activity.maxNumber}`}
+                                onChange={(
+                                  event
+                                ) =>
+                                  updateManualDraft(
+                                    index,
+                                    {
+                                      secondOperand:
+                                        event.target.value,
+                                    }
+                                  )
+                                }
+                              />
+
+                            </div>
+                          )}
+
+                        </div>
+
+                      </article>
+                    );
+                  }
                 )}
 
               </div>
-            )}
 
-          </section>
+            </section>
+          ) : (
+            <section className="teacher-question-preview-section">
 
-          {/* BOTTOM */}
+              <div className="teacher-question-preview-section-heading">
 
-          <div className="teacher-question-preview-bottom">
+                <div>
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  `/teacher/activities/${activityId}`
-                )
-              }
-            >
-              Back to Activity Details
-            </button>
+                  <span>
+                    QUESTION SET
+                  </span>
 
-          </div>
+                  <h3>
+                    {
+                      questions.length
+                    }{" "}
+                    Questions
+                  </h3>
+
+                </div>
+
+                <small>
+                  Answers are shown for teacher review only.
+                </small>
+
+              </div>
+
+              {questions.length ===
+                0 && (
+                <div className="teacher-question-preview-empty">
+                  No questions are available.
+                </div>
+              )}
+
+              {questions.length >
+                0 && (
+                <div className="teacher-question-preview-list">
+
+                  {questions.map(
+                    (
+                      question
+                    ) => (
+                      <article
+                        key={
+                          question.number
+                        }
+                        className="teacher-question-preview-card"
+                      >
+
+                        <div className="teacher-question-preview-number">
+                          {
+                            question.number
+                          }
+                        </div>
+
+                        <div className="teacher-question-preview-content">
+
+                          <span>
+                            {questionTypeLabel(
+                              question.questionType
+                            )}
+                          </span>
+
+                          <strong>
+                            {
+                              question.prompt
+                            }
+                          </strong>
+
+                        </div>
+
+                        <div className="teacher-question-preview-answer">
+
+                          <span>
+                            ANSWER
+                          </span>
+
+                          <strong>
+                            {
+                              question.correctAnswer
+                            }
+                          </strong>
+
+                        </div>
+
+                      </article>
+                    )
+                  )}
+
+                </div>
+              )}
+
+            </section>
+          )}
+
+          {saved && (
+            <div className="teacher-question-preview-bottom">
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    `/teacher/activities/${activityId}`
+                  )
+                }
+              >
+                Back to Activity Details
+              </button>
+
+            </div>
+          )}
 
         </>
       )}
